@@ -68,5 +68,21 @@ namespace KingdomClash.Characters
         {
             return Mathf.Clamp01(currentCooldown / cooldownTime);
         }
+        
+        /// <summary>
+        /// Gets the ability name
+        /// </summary>
+        public string GetName()
+        {
+            return abilityName;
+        }
+        
+        /// <summary>
+        /// Gets the ability description
+        /// </summary>
+        public string GetDescription()
+        {
+            return description;
+        }
     }
 }

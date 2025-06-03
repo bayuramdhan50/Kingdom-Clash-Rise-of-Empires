@@ -30,12 +30,23 @@ namespace KingdomClash
         [SerializeField] private Button startButton; // Tombol Start untuk memulai game dengan karakter yang dipilih
         [SerializeField] private string mainMenuSceneName = "MainMenu";
         [SerializeField] private string gameSceneName = "GameScene";
+        
+        [Header("Character Detail Panel")]
+        [SerializeField] private GameObject characterDetailPanel;
+        [SerializeField] private Button closeDetailButton;
+        [SerializeField] private TextMeshProUGUI detailCharacterNameText;
+        [SerializeField] private TextMeshProUGUI detailCharacterTitleText;
+        [SerializeField] private TextMeshProUGUI detailCharacterDescriptionText;
+        [SerializeField] private TextMeshProUGUI kingdomBonusesText;
+        [SerializeField] private TextMeshProUGUI abilityNameText;
+        [SerializeField] private TextMeshProUGUI abilityDescriptionText;
+        [SerializeField] private Image detailCharacterImage;
 
         // Reference to character manager to get character data
         private CharacterManager characterManager;
         private int selectedCharacterIndex = -1; // Indeks karakter yang dipilih, -1 berarti belum ada yang dipilih
 
-        private void Start()
+    private void Start()
         {
             // Get reference to CharacterManager
             characterManager = CharacterManager.Instance;
@@ -47,7 +58,13 @@ namespace KingdomClash
             
             InitializeButtons();
             PopulateCharacterSlots();
-        }        /// <summary>
+            
+            // Sembunyikan panel detail karakter saat awal
+            if (characterDetailPanel != null)
+            {
+                characterDetailPanel.SetActive(false);
+            }
+        }/// <summary>
         /// Initialize all button click listeners
         /// </summary>
         private void InitializeButtons()
@@ -55,13 +72,18 @@ namespace KingdomClash
             // Back button setup
             if (backButton != null)
                 backButton.onClick.AddListener(ReturnToMainMenu);
-            
-            // Start button setup
+              // Start button setup
             if (startButton != null)
             {
                 startButton.onClick.AddListener(StartGameWithSelectedCharacter);
                 // Tombol start awalnya dinonaktifkan sampai karakter dipilih
                 startButton.interactable = false;
+            }
+            
+            // Close detail panel button setup
+            if (closeDetailButton != null)
+            {
+                closeDetailButton.onClick.AddListener(CloseCharacterDetailPanel);
             }
 
             // Setup detail and slot buttons for each character slot
@@ -117,16 +139,48 @@ namespace KingdomClash
         /// <param name="characterIndex">Indeks karakter dalam array characterSlots</param>
         public void ShowCharacterDetails(int characterIndex)
         {
-            if (characterManager == null)
+            if (characterManager == null || characterDetailPanel == null)
                 return;
                 
             var characters = characterManager.GetAllCharacters();
             
             if (characterIndex >= 0 && characterIndex < characters.Count)
             {
-                Debug.Log($"Menampilkan detail untuk: {characters[characterIndex].CharacterName}");
-                // TODO: Implementasi panel detail karakter di sini
-                // Misalnya menampilkan deskripsi, bonus kingdom, dan kemampuan khusus
+                Character character = characters[characterIndex];
+                Debug.Log($"Menampilkan detail untuk: {character.CharacterName}");
+                
+                // Isi konten panel dengan detail karakter
+                if (detailCharacterNameText != null)
+                    detailCharacterNameText.text = character.CharacterName;
+                    
+                if (detailCharacterTitleText != null)
+                    detailCharacterTitleText.text = character.Title;
+                    
+                if (detailCharacterDescriptionText != null)
+                    detailCharacterDescriptionText.text = character.Description;
+                
+                if (detailCharacterImage != null && character.CharacterSprite != null)
+                    detailCharacterImage.sprite = character.CharacterSprite;
+                
+                // Isi informasi Kingdom Bonuses
+                if (kingdomBonusesText != null && character.kingdomBonuses != null)
+                {
+                    kingdomBonusesText.text = FormatKingdomBonuses(character.kingdomBonuses);
+                }
+                
+                // Isi informasi Ability
+                if (abilityNameText != null && character.specialAbility != null)
+                {
+                    abilityNameText.text = character.specialAbility.GetName();
+                }
+                
+                if (abilityDescriptionText != null && character.specialAbility != null)
+                {
+                    abilityDescriptionText.text = character.specialAbility.GetDescription();
+                }
+                
+                // Tampilkan panel detail
+                characterDetailPanel.SetActive(true);
             }
         }
 
@@ -205,6 +259,61 @@ namespace KingdomClash
         public void ReturnToMainMenu()
         {
             SceneManager.LoadScene(mainMenuSceneName);
+        }
+
+        /// <summary>
+        /// Menutup panel detail karakter
+        /// </summary>
+        public void CloseCharacterDetailPanel()
+        {
+            if (characterDetailPanel != null)
+            {
+                characterDetailPanel.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// Format kingdom bonuses menjadi teks yang mudah dibaca
+        /// </summary>
+        private string FormatKingdomBonuses(KingdomBonuses bonuses)
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            
+            // Resource production bonuses
+            if (bonuses.woodProductionBonus > 0)
+                sb.AppendLine($"• Produksi Kayu: +{bonuses.woodProductionBonus * 100}%");
+                
+            if (bonuses.foodProductionBonus > 0)
+                sb.AppendLine($"• Produksi Makanan: +{bonuses.foodProductionBonus * 100}%");
+                
+            if (bonuses.stoneProductionBonus > 0)
+                sb.AppendLine($"• Produksi Batu: +{bonuses.stoneProductionBonus * 100}%");
+                
+            if (bonuses.ironProductionBonus > 0)
+                sb.AppendLine($"• Produksi Besi: +{bonuses.ironProductionBonus * 100}%");
+            
+            // Military bonuses
+            if (bonuses.troopAttackBonus > 0)
+                sb.AppendLine($"• Serangan Pasukan: +{bonuses.troopAttackBonus * 100}%");
+                
+            if (bonuses.troopDefenseBonus > 0)
+                sb.AppendLine($"• Pertahanan Pasukan: +{bonuses.troopDefenseBonus * 100}%");
+                
+            if (bonuses.troopTrainingSpeedBonus > 0)
+                sb.AppendLine($"• Kecepatan Pelatihan: +{bonuses.troopTrainingSpeedBonus * 100}%");
+            
+            // Construction bonuses
+            if (bonuses.buildingSpeedBonus > 0)
+                sb.AppendLine($"• Kecepatan Konstruksi: +{bonuses.buildingSpeedBonus * 100}%");
+                
+            if (bonuses.buildingHealthBonus > 0)
+                sb.AppendLine($"• Ketahanan Bangunan: +{bonuses.buildingHealthBonus * 100}%");
+            
+            // Research bonuses
+            if (bonuses.researchSpeedBonus > 0)
+                sb.AppendLine($"• Kecepatan Riset: +{bonuses.researchSpeedBonus * 100}%");
+                
+            return sb.ToString();
         }
     }
 }
