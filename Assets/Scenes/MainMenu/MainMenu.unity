@@ -2191,7 +2191,6 @@ GameObject:
   - component: {fileID: 613513606}
   - component: {fileID: 613513605}
   - component: {fileID: 613513604}
-  - component: {fileID: 613513603}
   m_Layer: 0
   m_Name: GameManagers
   m_TagString: Untagged
@@ -2199,28 +2198,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &613513603
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 613513602}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c2687416ff0232543a3630d7c4ccd222, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  audioMixer: {fileID: 0}
-  masterVolumeSlider: {fileID: 217539027}
-  musicVolumeSlider: {fileID: 217539027}
-  sfxVolumeSlider: {fileID: 217539027}
-  graphicsQualityDropdown: {fileID: 658078127}
-  fullscreenToggle: {fileID: 1361462108}
-  resolutionDropdown: {fileID: 2070839701}
-  settingsPanel: {fileID: 661654450}
-  closeButton: {fileID: 2099284393}
-  saveSettingsButton: {fileID: 241595643}
 --- !u!114 &613513604
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2533,8 +2510,9 @@ GameObject:
   - component: {fileID: 661654451}
   - component: {fileID: 661654453}
   - component: {fileID: 661654452}
+  - component: {fileID: 661654454}
   m_Layer: 5
-  m_Name: SettingPanel
+  m_Name: SettingsPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2600,6 +2578,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 661654450}
   m_CullTransparentMesh: 1
+--- !u!114 &661654454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 661654450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee800fc55587ddd49bc65596aa8d8270, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterVolumeSlider: {fileID: 217539027}
+  musicVolumeSlider: {fileID: 0}
+  sfxVolumeSlider: {fileID: 0}
+  graphicsQualityDropdown: {fileID: 658078127}
+  fullscreenToggle: {fileID: 1361462108}
+  resolutionDropdown: {fileID: 2070839701}
+  closeButton: {fileID: 2099284393}
+  saveButton: {fileID: 241595643}
 --- !u!1 &731351352
 GameObject:
   m_ObjectHideFlags: 0
@@ -3372,6 +3370,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 945373245}
   m_CullTransparentMesh: 1
+--- !u!1 &1048662200
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1048662202}
+  - component: {fileID: 1048662201}
+  m_Layer: 0
+  m_Name: SettingsManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1048662201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048662200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2687416ff0232543a3630d7c4ccd222, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioMixer: {fileID: 0}
+--- !u!4 &1048662202
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048662200}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 432.19482, y: -627.02576, z: 1683.4701}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1103993632
 GameObject:
   m_ObjectHideFlags: 0
@@ -6164,8 +6207,9 @@ CanvasRenderer:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1596415737}
   - {fileID: 613513606}
+  - {fileID: 1596415737}
+  - {fileID: 1048662202}
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}

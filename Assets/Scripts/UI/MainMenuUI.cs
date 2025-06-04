@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using System.IO;
 
 namespace KingdomClash
 {
@@ -20,25 +19,43 @@ namespace KingdomClash
         [Header("Panels")]
         [SerializeField] private GameObject mainMenuPanel;
         [SerializeField] private GameObject characterSelectionPanel;
-        [SerializeField] private GameObject settingsPanel;
+        [SerializeField] private GameObject settingsPanel; // Ini akan menjadi panel di scene
 
         [Header("Settings")]
         [SerializeField] private string newGameSceneName = "GameScene";
         [SerializeField] private string characterSelectionSceneName = "SelectCharachters";
+
         private void Start()
         {
             InitializeButtons();
             CheckForSaveGame();
             ShowMainMenu();
             
-            // Hide other panels
+            // Pastikan panel lain dinonaktifkan pada start
             if (characterSelectionPanel != null)
                 characterSelectionPanel.SetActive(false);
-            
+                
             if (settingsPanel != null)
                 settingsPanel.SetActive(false);
+                
+            // Ensure SettingsManager exists
+            EnsureSettingsManagerExists();
         }
-          /// <summary>
+        
+        /// <summary>
+        /// Ensure that a SettingsManager instance exists in the scene
+        /// </summary>
+        private void EnsureSettingsManagerExists()
+        {
+            if (SettingsManager.Instance == null)
+            {
+                Debug.Log("Creating new SettingsManager instance...");
+                GameObject settingsManagerObj = new GameObject("SettingsManager");
+                settingsManagerObj.AddComponent<SettingsManager>();
+            }
+        }
+        
+        /// <summary>
         /// Shows the main menu panel
         /// </summary>
         public void ShowMainMenu()
@@ -53,12 +70,12 @@ namespace KingdomClash
                 Debug.LogError("Main menu panel reference is missing!");
             }
             
-            // Ensure other panels are hidden
-            if (settingsPanel != null)
-                settingsPanel.SetActive(false);
-                
+            // Hide other panels
             if (characterSelectionPanel != null)
                 characterSelectionPanel.SetActive(false);
+                
+            if (settingsPanel != null)
+                settingsPanel.SetActive(false);
         }
         
         /// <summary>
@@ -109,24 +126,15 @@ namespace KingdomClash
                 bool saveExists = SaveManager.Instance.DoesSaveExist();
                 continueButton.gameObject.SetActive(saveExists);
             }
-        }        /// <summary>
+        }
+        
+        /// <summary>
         /// Loads the character selection scene to start a new game
         /// </summary>
         public void StartNewGame()
         {
             Debug.Log("Loading character selection scene");
             SceneManager.LoadScene(characterSelectionSceneName);
-        }
-        
-        /// <summary>
-        /// Shows the character selection panel (deprecated - keeping for reference)
-        /// </summary>
-        private void ShowCharacterSelection()
-        {
-            if (characterSelectionPanel != null)
-            {
-                characterSelectionPanel.SetActive(true);
-            }
         }
 
         /// <summary>
@@ -146,31 +154,42 @@ namespace KingdomClash
         {
             Debug.Log("Opening load game panel");
             // Implementation will be added when we create the load game panel
-        }        /// <summary>
+        }
+        
+        /// <summary>
         /// Opens the settings panel
         /// </summary>
         public void OpenSettingsPanel()
         {
             Debug.Log("Opening settings panel");
-            if (settingsPanel != null)
-            {
-                HideMainMenu();
-                settingsPanel.SetActive(true);
-            }
-        }
-          /// <summary>
-        /// Closes the settings panel and shows the main menu
-        /// </summary>
-        public void CloseSettingsPanel()
-        {
-            Debug.Log("Closing settings panel and returning to main menu");
-            if (settingsPanel != null)
-            {
-                settingsPanel.SetActive(false);
-            }
             
-            // Explicitly show the main menu panel
-            ShowMainMenu();
+            // Hide main menu panel first
+            HideMainMenu();
+            
+            // Make sure SettingsManager exists
+            EnsureSettingsManagerExists();
+            
+            // Show the settings panel (should be a local panel in the scene)
+            if (settingsPanel != null)
+            {
+                settingsPanel.SetActive(true);
+                
+                // Check if it has SettingsPanel component
+                SettingsPanel panelComponent = settingsPanel.GetComponent<SettingsPanel>();
+                if (panelComponent == null)
+                {
+                    Debug.LogWarning("Settings panel does not have a SettingsPanel component! Adding one...");
+                    panelComponent = settingsPanel.AddComponent<SettingsPanel>();
+                }
+                
+                // Panel will sync with SettingsManager via its OnEnable method
+            }
+            else
+            {
+                Debug.LogError("Settings panel reference not found! Cannot open settings.");
+                // Show main menu again as fallback
+                ShowMainMenu();
+            }
         }
 
         /// <summary>
