@@ -29,7 +29,6 @@ namespace KingdomClash
         [SerializeField] private Button backButton;
         [SerializeField] private Button startButton; // Tombol Start untuk memulai game dengan karakter yang dipilih
         [SerializeField] private string mainMenuSceneName = "MainMenu";
-        [SerializeField] private string gameSceneName = "GameScene";
         
         [Header("Character Detail Panel")]
         [SerializeField] private GameObject characterDetailPanel;
