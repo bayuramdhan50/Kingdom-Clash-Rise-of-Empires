@@ -131,7 +131,23 @@ namespace KingdomClash
         /// </summary>
         public void StartNewGame()
         {
-            Debug.Log("Loading character selection scene");
+            Debug.Log("Loading character selection scene for new game");
+            
+            // Ensure GameManager exists and set isContinuing to false
+            if (GameManager.Instance == null)
+            {
+                GameObject gameManagerObj = new GameObject("GameManager");
+                gameManagerObj.AddComponent<GameManager>();
+            }
+            
+            // Ensure SaveManager exists for later save creation
+            if (SaveManager.Instance == null)
+            {
+                GameObject saveManagerObj = new GameObject("SaveManager");
+                saveManagerObj.AddComponent<SaveManager>();
+            }
+            
+            // Load character selection scene
             SceneManager.LoadScene(characterSelectionSceneName);
         }
 
@@ -141,8 +157,27 @@ namespace KingdomClash
         public void ContinueGame()
         {
             Debug.Log("Continuing last game");
-            SaveManager.Instance.LoadLastSave();
-            SceneManager.LoadScene(newGameSceneName);
+            
+            // Ensure GameManager exists
+            if (GameManager.Instance == null)
+            {
+                GameObject gameManagerObj = new GameObject("GameManager");
+                gameManagerObj.AddComponent<GameManager>();
+            }
+            
+            // Load the saved game data
+            GameData savedData = SaveManager.Instance.LoadLastSave();
+            
+            // Pass data to GameManager and set continuing flag
+            if (savedData != null && GameManager.Instance != null)
+            {
+                GameManager.Instance.LoadGame(savedData);
+            }
+            else
+            {
+                Debug.LogError("Failed to load saved game data!");
+                SceneManager.LoadScene(newGameSceneName);
+            }
         }
 
         /// <summary>

@@ -99,14 +99,17 @@ namespace KingdomClash
     /// <param name="gameData">The game data to save</param>
     public void SaveCurrentGame(GameData gameData)
     {
+        if (gameData == null)
+        {
+            Debug.LogError("Cannot save null game data!");
+            return;
+        }
+
+        // Update timestamp
+        gameData.dateTime = System.DateTime.Now.ToString();
+        
         // Save to the latest save file
         SaveGameData(gameData, latestSaveFilePath);
-        
-        // Also save a timestamped version for the load game menu
-        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        string timestampedFilePath = Path.Combine(saveDirectoryPath, $"save_{timestamp}.json");
-        SaveGameData(gameData, timestampedFilePath);
-        
         Debug.Log("Game saved successfully to: " + latestSaveFilePath);
     }
 

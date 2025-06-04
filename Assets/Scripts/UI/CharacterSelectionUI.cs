@@ -235,8 +235,15 @@ namespace KingdomClash
                 
                 Debug.Log($"Memulai game dengan karakter: {characters[selectedCharacterIndex].CharacterName}");
                 
-                // Load scene game
-                SceneManager.LoadScene(gameSceneName);
+                // Ensure GameManager exists
+                if (GameManager.Instance == null)
+                {
+                    GameObject gameManagerObj = new GameObject("GameManager");
+                    gameManagerObj.AddComponent<GameManager>();
+                }
+                
+                // Tell GameManager to start a new game (this will reset all data)
+                GameManager.Instance.StartNewGame();
             }
             else
             {
