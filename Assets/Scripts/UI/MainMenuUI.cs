@@ -24,6 +24,7 @@ namespace KingdomClash
         [Header("Settings")]
         [SerializeField] private string newGameSceneName = "GameScene";
         [SerializeField] private string characterSelectionSceneName = "SelectCharachters";
+        [SerializeField] private string LoadSceneName = "LoadScene";
 
         private void Start()
         {
@@ -186,6 +187,7 @@ namespace KingdomClash
         public void OpenLoadGamePanel()
         {
             Debug.Log("Opening load game panel");
+            SceneManager.LoadScene(LoadSceneName);
             // Implementation will be added when we create the load game panel
         }
         
