@@ -49,7 +49,6 @@ namespace KingdomClash
         {
             if (SettingsManager.Instance == null)
             {
-                Debug.Log("Creating new SettingsManager instance...");
                 GameObject settingsManagerObj = new GameObject("SettingsManager");
                 settingsManagerObj.AddComponent<SettingsManager>();
             }
@@ -60,7 +59,6 @@ namespace KingdomClash
         /// </summary>
         public void ShowMainMenu()
         {
-            Debug.Log("Showing main menu panel");
             if (mainMenuPanel != null)
             {
                 mainMenuPanel.SetActive(true);
@@ -161,7 +159,6 @@ namespace KingdomClash
         /// </summary>
         public void OpenSettingsPanel()
         {
-            Debug.Log("Opening settings panel");
             
             // Hide main menu panel first
             HideMainMenu();
@@ -178,7 +175,6 @@ namespace KingdomClash
                 SettingsPanel panelComponent = settingsPanel.GetComponent<SettingsPanel>();
                 if (panelComponent == null)
                 {
-                    Debug.LogWarning("Settings panel does not have a SettingsPanel component! Adding one...");
                     panelComponent = settingsPanel.AddComponent<SettingsPanel>();
                 }
                 

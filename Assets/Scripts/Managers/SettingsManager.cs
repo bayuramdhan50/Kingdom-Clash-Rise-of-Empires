@@ -52,9 +52,6 @@ namespace KingdomClash
             
             // Apply initial settings
             ApplyAllSettings();
-            
-            // Log successful initialization
-            Debug.Log("SettingsManager initialized successfully as singleton");
         }
         
         /// <summary>
@@ -115,7 +112,6 @@ namespace KingdomClash
         {
             if (panel == null)
             {
-                Debug.LogError("Cannot sync UI: Settings panel is null");
                 return;
             }
             
@@ -178,8 +174,6 @@ namespace KingdomClash
                 panel.SaveButton.onClick.RemoveAllListeners();
                 panel.SaveButton.onClick.AddListener(SaveSettings);
             }
-            
-            Debug.Log("UI elements successfully synced with settings");
         }
         
         /// <summary>
@@ -316,7 +310,6 @@ namespace KingdomClash
             PlayerPrefs.SetInt("ResolutionIndex", resolutionIndex);
             
             PlayerPrefs.Save();
-            Debug.Log("Settings saved to PlayerPrefs");
         }
         
         /// <summary>

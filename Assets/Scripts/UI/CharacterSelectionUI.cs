@@ -147,7 +147,6 @@ namespace KingdomClash
             if (characterIndex >= 0 && characterIndex < characters.Count)
             {
                 Character character = characters[characterIndex];
-                Debug.Log($"Menampilkan detail untuk: {character.CharacterName}");
                 
                 // Isi konten panel dengan detail karakter
                 if (detailCharacterNameText != null)
