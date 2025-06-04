@@ -29,7 +29,6 @@ namespace KingdomClash
         [SerializeField] private Button backButton;
         [SerializeField] private Button startButton; // Tombol Start untuk memulai game dengan karakter yang dipilih
         [SerializeField] private string mainMenuSceneName = "MainMenu";
-        [SerializeField] private string gameSceneName = "GameScene";
         
         [Header("Character Detail Panel")]
         [SerializeField] private GameObject characterDetailPanel;
@@ -147,7 +146,6 @@ namespace KingdomClash
             if (characterIndex >= 0 && characterIndex < characters.Count)
             {
                 Character character = characters[characterIndex];
-                Debug.Log($"Menampilkan detail untuk: {character.CharacterName}");
                 
                 // Isi konten panel dengan detail karakter
                 if (detailCharacterNameText != null)
@@ -236,8 +234,15 @@ namespace KingdomClash
                 
                 Debug.Log($"Memulai game dengan karakter: {characters[selectedCharacterIndex].CharacterName}");
                 
-                // Load scene game
-                SceneManager.LoadScene(gameSceneName);
+                // Ensure GameManager exists
+                if (GameManager.Instance == null)
+                {
+                    GameObject gameManagerObj = new GameObject("GameManager");
+                    gameManagerObj.AddComponent<GameManager>();
+                }
+                
+                // Tell GameManager to start a new game (this will reset all data)
+                GameManager.Instance.StartNewGame();
             }
             else
             {

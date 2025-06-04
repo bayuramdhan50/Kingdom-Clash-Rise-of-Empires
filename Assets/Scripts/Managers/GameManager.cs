@@ -21,6 +21,11 @@ namespace KingdomClash
         
         // Game state flag
         private bool isGamePaused = false;
+        
+        // Flag to indicate if we are continuing a saved game or starting a new game
+        private bool isContinuing = false;
+
+        public bool IsContinuing => isContinuing;
 
         private void Awake()
         {
@@ -38,25 +43,59 @@ namespace KingdomClash
         private void Start()
         {
             // Initialize other systems if needed
-        }
-
-        /// <summary>
-        /// Start a new game
+        }        /// <summary>
+        /// Start a new game, resetting all data
         /// </summary>
         public void StartNewGame()
         {
+            // Reset all data by creating a new GameData
             currentGameData = new GameData();
+            // Set the flag to indicate this is a new game, not a continuation
+            isContinuing = false;
+            
+            // If SaveManager exists, create a new save
+            if (SaveManager.Instance != null && currentGameData != null)
+            {
+                // If character was selected, use it, otherwise use default
+                Characters.CharacterType selectedType = Characters.CharacterManager.Instance != null && 
+                    Characters.CharacterManager.Instance.GetSelectedCharacter() != null ?
+                    Characters.CharacterManager.Instance.GetSelectedCharacter().CharacterType :
+                    Characters.CharacterType.Arvandir;
+                    
+                SaveManager.Instance.CreateNewSave(selectedType);
+            }
+            
             SceneManager.LoadScene(gameSceneName);
         }
 
         /// <summary>
-        /// Load game data
+        /// Load game data and continue from saved point
         /// </summary>
         /// <param name="gameData">The game data to load</param>
         public void LoadGame(GameData gameData)
         {
             currentGameData = gameData;
+            // Set the flag to indicate we are continuing a saved game
+            isContinuing = true;
             SceneManager.LoadScene(gameSceneName);
+        }
+
+        /// <summary>
+        /// Get the current game data
+        /// </summary>
+        /// <returns>The current game data or null if not available</returns>
+        public GameData GetCurrentGameData()
+        {
+            return currentGameData;
+        }
+        
+        /// <summary>
+        /// Check if we are continuing a saved game
+        /// </summary>
+        /// <returns>True if continuing a saved game, false if starting a new game</returns>
+        public bool GetIsContinuing()
+        {
+            return isContinuing;
         }
 
         /// <summary>

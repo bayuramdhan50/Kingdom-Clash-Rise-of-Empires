@@ -47,7 +47,6 @@ namespace KingdomClash
             if (SettingsManager.Instance != null)
             {
                 SettingsManager.Instance.SyncUIWithSettings(this);
-                Debug.Log("Settings panel UI synced with SettingsManager");
             }
             else
             {

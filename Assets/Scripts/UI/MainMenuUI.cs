@@ -24,6 +24,7 @@ namespace KingdomClash
         [Header("Settings")]
         [SerializeField] private string newGameSceneName = "GameScene";
         [SerializeField] private string characterSelectionSceneName = "SelectCharachters";
+        [SerializeField] private string LoadSceneName = "LoadScene";
 
         private void Start()
         {
@@ -49,7 +50,6 @@ namespace KingdomClash
         {
             if (SettingsManager.Instance == null)
             {
-                Debug.Log("Creating new SettingsManager instance...");
                 GameObject settingsManagerObj = new GameObject("SettingsManager");
                 settingsManagerObj.AddComponent<SettingsManager>();
             }
@@ -60,7 +60,6 @@ namespace KingdomClash
         /// </summary>
         public void ShowMainMenu()
         {
-            Debug.Log("Showing main menu panel");
             if (mainMenuPanel != null)
             {
                 mainMenuPanel.SetActive(true);
@@ -133,7 +132,23 @@ namespace KingdomClash
         /// </summary>
         public void StartNewGame()
         {
-            Debug.Log("Loading character selection scene");
+            Debug.Log("Loading character selection scene for new game");
+            
+            // Ensure GameManager exists and set isContinuing to false
+            if (GameManager.Instance == null)
+            {
+                GameObject gameManagerObj = new GameObject("GameManager");
+                gameManagerObj.AddComponent<GameManager>();
+            }
+            
+            // Ensure SaveManager exists for later save creation
+            if (SaveManager.Instance == null)
+            {
+                GameObject saveManagerObj = new GameObject("SaveManager");
+                saveManagerObj.AddComponent<SaveManager>();
+            }
+            
+            // Load character selection scene
             SceneManager.LoadScene(characterSelectionSceneName);
         }
 
@@ -143,8 +158,27 @@ namespace KingdomClash
         public void ContinueGame()
         {
             Debug.Log("Continuing last game");
-            SaveManager.Instance.LoadLastSave();
-            SceneManager.LoadScene(newGameSceneName);
+            
+            // Ensure GameManager exists
+            if (GameManager.Instance == null)
+            {
+                GameObject gameManagerObj = new GameObject("GameManager");
+                gameManagerObj.AddComponent<GameManager>();
+            }
+            
+            // Load the saved game data
+            GameData savedData = SaveManager.Instance.LoadLastSave();
+            
+            // Pass data to GameManager and set continuing flag
+            if (savedData != null && GameManager.Instance != null)
+            {
+                GameManager.Instance.LoadGame(savedData);
+            }
+            else
+            {
+                Debug.LogError("Failed to load saved game data!");
+                SceneManager.LoadScene(newGameSceneName);
+            }
         }
 
         /// <summary>
@@ -153,6 +187,7 @@ namespace KingdomClash
         public void OpenLoadGamePanel()
         {
             Debug.Log("Opening load game panel");
+            SceneManager.LoadScene(LoadSceneName);
             // Implementation will be added when we create the load game panel
         }
         
@@ -161,7 +196,6 @@ namespace KingdomClash
         /// </summary>
         public void OpenSettingsPanel()
         {
-            Debug.Log("Opening settings panel");
             
             // Hide main menu panel first
             HideMainMenu();
@@ -178,7 +212,6 @@ namespace KingdomClash
                 SettingsPanel panelComponent = settingsPanel.GetComponent<SettingsPanel>();
                 if (panelComponent == null)
                 {
-                    Debug.LogWarning("Settings panel does not have a SettingsPanel component! Adding one...");
                     panelComponent = settingsPanel.AddComponent<SettingsPanel>();
                 }
                 
