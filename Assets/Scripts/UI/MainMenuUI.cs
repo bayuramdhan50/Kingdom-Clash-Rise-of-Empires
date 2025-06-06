@@ -121,9 +121,9 @@ namespace KingdomClash
         {
             if (continueButton != null)
             {
-                // Check if save file exists
-                bool saveExists = SaveManager.Instance.DoesSaveExist();
-                continueButton.gameObject.SetActive(saveExists);
+                // Check if any save files exist
+                bool savesExist = SaveManager.Instance.DoSavesExist();
+                continueButton.gameObject.SetActive(savesExist);
             }
         }
         
@@ -166,8 +166,8 @@ namespace KingdomClash
                 gameManagerObj.AddComponent<GameManager>();
             }
             
-            // Load the saved game data
-            GameData savedData = SaveManager.Instance.LoadLastSave();
+            // Load the saved game data from auto-save slot (slot 0)
+            GameData savedData = SaveManager.Instance.LoadGameFromSlot(0);
             
             // Pass data to GameManager and set continuing flag
             if (savedData != null && GameManager.Instance != null)

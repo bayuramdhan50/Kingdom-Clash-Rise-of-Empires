@@ -3557,7 +3557,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2073130483}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1e834521fef6d44291ded4fc1dc58d7, type: 3}
+  m_Script: {fileID: 11500000, guid: 48f725db0666e53448a6a7bf791becf5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   saveSlots:
@@ -3568,9 +3568,14 @@ MonoBehaviour:
   - {fileID: 1388546987}
   - {fileID: 1292776812}
   backButton: {fileID: 1151222507}
+  newSaveButton: {fileID: 0}
   noSavesText: {fileID: 2111917780315626775}
-  mainMenuSceneName: MainMenu
-  maxSaveSlots: 5
+  saveNameInputPanel: {fileID: 0}
+  saveNameInput: {fileID: 0}
+  confirmSaveButton: {fileID: 0}
+  cancelSaveButton: {fileID: 0}
+  gameSceneName: GameScene
+  maxSaveSlots: 10
 --- !u!222 &79336954095542519
 CanvasRenderer:
   m_ObjectHideFlags: 0
