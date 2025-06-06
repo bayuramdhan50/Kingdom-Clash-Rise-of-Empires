@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 
 namespace KingdomClash.UI
@@ -11,13 +12,30 @@ namespace KingdomClash.UI
         [Header("Panel References")]
         [SerializeField] private PlayerInfoPanel playerInfoPanel;
         [SerializeField] private ResourcePanel resourcePanel;
+        [SerializeField] private GameObject shopBuildingPanel;
+        [SerializeField] private Button toggleShopButton;
         
         // You can add more panel references here as your HUD grows
+
+        private void Awake()
+        {
+            // Setup toggle shop button if assigned
+            if (toggleShopButton != null)
+            {
+                toggleShopButton.onClick.AddListener(ToggleShopBuildingPanel);
+            }
+        }
 
         private void Start()
         {
             // Initialize the HUD
             InitializeHUD();
+            
+            // Make sure the shop panel is closed at start
+            if (shopBuildingPanel != null)
+            {
+                shopBuildingPanel.SetActive(false);
+            }
         }
 
         /// <summary>
@@ -35,7 +53,8 @@ namespace KingdomClash.UI
             {
                 Debug.LogWarning("HUDPanel: GameManager or GameData not available. Using default values.");
                 SetDefaultValues();
-            }        }
+            }        
+        }
         
         /// <summary>
         /// Update all HUD elements with data from GameData
@@ -52,7 +71,8 @@ namespace KingdomClash.UI
             // Update resource panel
             if (resourcePanel != null && gameData.resources != null)
             {
-                resourcePanel.UpdateResourceDisplay(gameData.resources);            }
+                resourcePanel.UpdateResourceDisplay(gameData.resources);            
+            }
         }
         
         /// <summary>
@@ -69,7 +89,8 @@ namespace KingdomClash.UI
             // Set default values for resource panel
             if (resourcePanel != null)
             {
-                resourcePanel.SetDefaultValues();            }
+                resourcePanel.SetDefaultValues();            
+            }
         }
         
         /// <summary>
@@ -79,7 +100,41 @@ namespace KingdomClash.UI
         {
             InitializeHUD();
         }
-            /// <summary>
+        
+        /// <summary>
+        /// Opens the shop building panel
+        /// </summary>
+        public void OpenShopBuildingPanel()
+        {
+            if (shopBuildingPanel != null)
+            {
+                shopBuildingPanel.SetActive(true);
+            }
+        }
+        
+        /// <summary>
+        /// Closes the shop building panel
+        /// </summary>
+        public void CloseShopBuildingPanel()
+        {
+            if (shopBuildingPanel != null)
+            {
+                shopBuildingPanel.SetActive(false);
+            }
+        }
+        
+        /// <summary>
+        /// Toggles the shop building panel visibility
+        /// </summary>
+        public void ToggleShopBuildingPanel()
+        {
+            if (shopBuildingPanel != null)
+            {
+                shopBuildingPanel.SetActive(!shopBuildingPanel.activeSelf);
+            }
+        }
+            
+        /// <summary>
         /// Get reference to the player info panel
         /// </summary>
         public PlayerInfoPanel GetPlayerInfoPanel()
