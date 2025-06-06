@@ -21,6 +21,10 @@ namespace KingdomClash
         [Header("Settings")]
         [SerializeField] private string mainMenuSceneName = "MainMenu";
         [SerializeField] private int maxSaveSlots = 10; // Maximum number of save slots to display
+        
+        [Header("Auto Save")]
+        [SerializeField] private bool useAutoSave = true; // Whether to treat slot 0 as auto-save
+        [SerializeField] private string autoSaveFileName = "SaveSlot_0"; // Name of auto-save file
 
         // Path where save files are stored
         private string saveDirectoryPath;
@@ -103,11 +107,56 @@ namespace KingdomClash
                 return;
             }
 
-            // Configure save slots for each save file (limit to max number of available slots)
-            int slotsToUse = Mathf.Min(saveFiles.Length, saveSlots.Length, maxSaveSlots);
-            for (int i = 0; i < slotsToUse; i++)
+            // Handle auto-save slot first if it exists
+            if (useAutoSave && saveSlots.Length > 0)
             {
-                ConfigureSaveSlot(saveSlots[i], saveFiles[i]);
+                // Check if auto-save exists
+                bool autoSaveExists = Array.Exists(saveFiles, file => file == autoSaveFileName);
+                
+                if (autoSaveExists)
+                {
+                    // Configure the first slot as auto-save
+                    ConfigureSaveSlot(saveSlots[0], autoSaveFileName, true);
+                    
+                    // Set text to indicate it's auto-save
+                    TextMeshProUGUI slotText = saveSlots[0].GetComponentInChildren<TextMeshProUGUI>();
+                    if (slotText != null)
+                    {
+                        string currentText = slotText.text;
+                        slotText.text = $"Auto Save\n{currentText}";
+                    }
+                }
+                else
+                {
+                    // Set text to indicate this is the auto-save slot but empty
+                    TextMeshProUGUI slotText = saveSlots[0].GetComponentInChildren<TextMeshProUGUI>();
+                    if (slotText != null)
+                    {
+                        slotText.text = "Auto Save\n(Empty)";
+                    }
+                }
+            }
+
+            // Configure remaining save slots for each save file (skipping auto-save if already handled)
+            int startIndex = useAutoSave ? 1 : 0;
+            int fileIndex = 0;
+            
+            // Limit the number of slots to process based on maxSaveSlots setting
+            int slotsToProcess = Mathf.Min(saveSlots.Length, maxSaveSlots);
+            
+            for (int i = startIndex; i < slotsToProcess && fileIndex < saveFiles.Length; i++)
+            {
+                // Skip the auto-save file when processing regular slots
+                if (useAutoSave && saveFiles[fileIndex] == autoSaveFileName)
+                {
+                    fileIndex++;
+                    // Skip this iteration if we've reached the end of save files
+                    if (fileIndex >= saveFiles.Length) break;
+                }
+                
+                // Configure this slot
+                ConfigureSaveSlot(saveSlots[i], saveFiles[fileIndex], false);
+                fileIndex++;
             }
         }
 
@@ -116,7 +165,8 @@ namespace KingdomClash
         /// </summary>
         /// <param name="slotObject">The slot GameObject to configure</param>
         /// <param name="saveFileName">The name of the save file</param>
-        private void ConfigureSaveSlot(GameObject slotObject, string saveFileName)
+        /// <param name="isAutoSave">Whether this is the auto-save slot</param>
+        private void ConfigureSaveSlot(GameObject slotObject, string saveFileName, bool isAutoSave)
         {
             // Get save data
             GameData saveData = LoadSaveData(saveFileName);
@@ -131,7 +181,15 @@ namespace KingdomClash
             if (slotText != null)
             {
                 // Format: "Player Name - Level X - DateTime"
-                slotText.text = $"{saveData.playerName} - Level {saveData.level}\n{saveData.dateTime}";
+                if (!isAutoSave)
+                {
+                    slotText.text = $"{saveData.playerName} - Level {saveData.level}\n{saveData.dateTime}";
+                }
+                else
+                {
+                    // For auto-save, text is set in LoadSaveSlots with the "Auto Save" prefix
+                    slotText.text = $"{saveData.playerName} - Level {saveData.level}\n{saveData.dateTime}";
+                }
             }
 
             // Add load action to button

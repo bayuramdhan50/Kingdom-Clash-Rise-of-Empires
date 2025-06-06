@@ -15,7 +15,6 @@ namespace KingdomClash
 
         // Path for save data
         private string saveDirectoryPath;
-        private string latestSaveFilePath;
 
         private void Awake()
         {
@@ -31,7 +30,6 @@ namespace KingdomClash
 
             // Initialize save paths
             saveDirectoryPath = Path.Combine(Application.persistentDataPath, "Saves");
-            latestSaveFilePath = Path.Combine(saveDirectoryPath, "latest_save.json");
 
             // Create save directory if it doesn't exist
             if (!Directory.Exists(saveDirectoryPath))
@@ -41,44 +39,43 @@ namespace KingdomClash
         }
 
         /// <summary>
-        /// Checks if any save file exists
+        /// Checks if any save files exist
         /// </summary>
-        /// <returns>True if save exists, false otherwise</returns>
-        public bool DoesSaveExist()
+        /// <returns>True if any saves exist, false otherwise</returns>
+        public bool DoSavesExist()
         {
-            return File.Exists(latestSaveFilePath);
+            string[] saveFiles = GetAllSaveFiles();
+            return saveFiles != null && saveFiles.Length > 0;
         }        /// <summary>
-        /// Creates a new save file
+        /// Save a game to a specific slot
         /// </summary>
-        public void CreateNewSave(Characters.CharacterType characterType = Characters.CharacterType.Arvandir)
+        /// <param name="slotIndex">The slot index to save to</param>
+        /// <param name="gameData">The game data to save</param>
+        public void SaveGameToSlot(int slotIndex, GameData gameData)
         {
-            GameData newGameData = new GameData
-            {
-                playerName = "Player",
-                level = 1,
-                resources = new Resources { wood = 500, stone = 300, iron = 200, food = 600 },
-                selectedCharacter = characterType
-            };
-
-            SaveGameData(newGameData, latestSaveFilePath);
-            Debug.Log($"New save created with character {characterType} at: {latestSaveFilePath}");
+            string filePath = Path.Combine(saveDirectoryPath, $"SaveSlot_{slotIndex}.json");
+            SaveGameData(gameData, filePath);
+            Debug.Log($"Game saved to slot {slotIndex} at: {filePath}");
         }
 
         /// <summary>
-        /// Loads the last saved game
+        /// Load a game from a specific slot
         /// </summary>
-        /// <returns>The game data or null if no save exists</returns>
-        public GameData LoadLastSave()
+        /// <param name="slotIndex">The slot index to load from</param>
+        /// <returns>The game data or null if no save exists in that slot</returns>
+        public GameData LoadGameFromSlot(int slotIndex)
         {
-            if (!DoesSaveExist())
+            string filePath = Path.Combine(saveDirectoryPath, $"SaveSlot_{slotIndex}.json");
+            
+            if (!File.Exists(filePath))
             {
-                Debug.LogWarning("No save file exists to load!");
+                Debug.LogWarning($"No save file exists in slot {slotIndex}!");
                 return null;
             }
 
-            string json = File.ReadAllText(latestSaveFilePath);
+            string json = File.ReadAllText(filePath);
             GameData data = JsonUtility.FromJson<GameData>(json);
-            Debug.Log("Game loaded successfully from: " + latestSaveFilePath);
+            Debug.Log($"Game loaded successfully from slot {slotIndex}");
             return data;
         }
 
@@ -97,7 +94,8 @@ namespace KingdomClash
     /// Saves the current game state
     /// </summary>
     /// <param name="gameData">The game data to save</param>
-    public void SaveCurrentGame(GameData gameData)
+    /// <param name="slotIndex">The slot index to save to (0 for autosave)</param>
+    public void SaveCurrentGame(GameData gameData, int slotIndex = 0)
     {
         if (gameData == null)
         {
@@ -108,9 +106,10 @@ namespace KingdomClash
         // Update timestamp
         gameData.dateTime = System.DateTime.Now.ToString();
         
-        // Save to the latest save file
-        SaveGameData(gameData, latestSaveFilePath);
-        Debug.Log("Game saved successfully to: " + latestSaveFilePath);
+        // Save to the specified slot
+        string filePath = Path.Combine(saveDirectoryPath, $"SaveSlot_{slotIndex}.json");
+        SaveGameData(gameData, filePath);
+        Debug.Log($"Game saved successfully to slot {slotIndex} at: {filePath}");
     }
 
     /// <summary>

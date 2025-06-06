@@ -187,16 +187,21 @@ namespace KingdomClash.UI
             }
             
             SetPanelActive(false);
-        }        /// <summary>
+        }        [Header("Scene Names")]
+        [SerializeField] private string saveSceneName = "SaveScene";
+        
+        /// <summary>
         /// Save the current game state
         /// </summary>
         public void SaveGame()
         {
-            // If GameManager exists, use it to save the game
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.SaveGame();
-            }
+            // Resume normal time scale before scene transition
+            Time.timeScale = 1;
+            
+            // Load the save scene
+            UnityEngine.SceneManagement.SceneManager.LoadScene(saveSceneName);
+            
+            // Note: The actual saving will happen in the SaveSceneUI script
         }        /// <summary>
         /// Return to the main menu
         /// </summary>
