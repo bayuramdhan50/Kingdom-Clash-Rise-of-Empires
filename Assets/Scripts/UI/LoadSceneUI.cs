@@ -14,14 +14,13 @@ namespace KingdomClash
     public class LoadSceneUI : MonoBehaviour
     {
         [Header("UI References")]
-        [SerializeField] private Transform saveSlotContainer; // Parent container for save slots
-        [SerializeField] private GameObject saveSlotPrefab; // Prefab for each save slot
+        [SerializeField] private GameObject[] saveSlots; // Array of pre-created save slot GameObjects
         [SerializeField] private Button backButton; // Button to return to main menu
         [SerializeField] private TextMeshProUGUI noSavesText; // Text to display when no saves exist
 
         [Header("Settings")]
         [SerializeField] private string mainMenuSceneName = "MainMenu";
-        [SerializeField] private int maxSaveSlots = 5; // Maximum number of save slots to display
+        [SerializeField] private int maxSaveSlots = 10; // Maximum number of save slots to display
 
         // Path where save files are stored
         private string saveDirectoryPath;
@@ -41,6 +40,13 @@ namespace KingdomClash
                 Debug.LogError("Back button reference is missing!");
             }
 
+            // Check if we have enough save slots
+            if (saveSlots == null || saveSlots.Length == 0)
+            {
+                Debug.LogError("No save slot GameObjects assigned!");
+                return;
+            }
+
             // Load and display save slots
             LoadSaveSlots();
         }
@@ -50,10 +56,29 @@ namespace KingdomClash
         /// </summary>
         private void LoadSaveSlots()
         {
-            // Clear any existing save slots
-            foreach (Transform child in saveSlotContainer)
+            // Make sure all slots are active first (all slots remain visible in the UI)
+            foreach (GameObject slot in saveSlots)
             {
-                Destroy(child.gameObject);
+                if (slot != null)
+                {
+                    slot.SetActive(true);
+                    
+                    // Clear previous text (optional)
+                    TextMeshProUGUI slotText = slot.GetComponentInChildren<TextMeshProUGUI>();
+                    if (slotText != null)
+                    {
+                        slotText.text = "Empty Slot";
+                    }
+                    
+                    // Remove previous button listeners
+                    Button slotButton = slot.GetComponentInChildren<Button>();
+                    if (slotButton != null)
+                    {
+                        slotButton.onClick.RemoveAllListeners();
+                        // Optionally disable the button for empty slots
+                        slotButton.interactable = false;
+                    }
+                }
             }
 
             // Check if SaveManager exists
@@ -78,22 +103,21 @@ namespace KingdomClash
                 return;
             }
 
-            // Create save slot for each save file (limit to maxSaveSlots)
-            for (int i = 0; i < Mathf.Min(saveFiles.Length, maxSaveSlots); i++)
+            // Configure save slots for each save file (limit to max number of available slots)
+            int slotsToUse = Mathf.Min(saveFiles.Length, saveSlots.Length, maxSaveSlots);
+            for (int i = 0; i < slotsToUse; i++)
             {
-                CreateSaveSlot(saveFiles[i]);
+                ConfigureSaveSlot(saveSlots[i], saveFiles[i]);
             }
         }
 
         /// <summary>
-        /// Create a UI save slot for a save file
+        /// Configure a UI save slot for a save file
         /// </summary>
+        /// <param name="slotObject">The slot GameObject to configure</param>
         /// <param name="saveFileName">The name of the save file</param>
-        private void CreateSaveSlot(string saveFileName)
+        private void ConfigureSaveSlot(GameObject slotObject, string saveFileName)
         {
-            // Instantiate the save slot prefab
-            GameObject slotInstance = Instantiate(saveSlotPrefab, saveSlotContainer);
-
             // Get save data
             GameData saveData = LoadSaveData(saveFileName);
             if (saveData == null)
@@ -103,7 +127,7 @@ namespace KingdomClash
             }
 
             // Set slot info
-            TextMeshProUGUI slotText = slotInstance.GetComponentInChildren<TextMeshProUGUI>();
+            TextMeshProUGUI slotText = slotObject.GetComponentInChildren<TextMeshProUGUI>();
             if (slotText != null)
             {
                 // Format: "Player Name - Level X - DateTime"
@@ -111,9 +135,14 @@ namespace KingdomClash
             }
 
             // Add load action to button
-            Button slotButton = slotInstance.GetComponentInChildren<Button>();
+            Button slotButton = slotObject.GetComponentInChildren<Button>();
             if (slotButton != null)
             {
+                // Make sure the button is interactable
+                slotButton.interactable = true;
+                
+                // Remove any existing listeners to prevent duplicates
+                slotButton.onClick.RemoveAllListeners();
                 slotButton.onClick.AddListener(() => LoadGame(saveData));
             }
         }
