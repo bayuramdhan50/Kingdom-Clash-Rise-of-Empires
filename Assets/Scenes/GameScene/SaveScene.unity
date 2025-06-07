@@ -493,7 +493,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Load Game
+  m_text: Save Game
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3568,14 +3568,7 @@ MonoBehaviour:
   - {fileID: 1388546987}
   - {fileID: 1292776812}
   backButton: {fileID: 1151222507}
-  newSaveButton: {fileID: 0}
-  noSavesText: {fileID: 2111917780315626775}
-  saveNameInputPanel: {fileID: 0}
-  saveNameInput: {fileID: 0}
-  confirmSaveButton: {fileID: 0}
-  cancelSaveButton: {fileID: 0}
   gameSceneName: GameScene
-  maxSaveSlots: 10
 --- !u!222 &79336954095542519
 CanvasRenderer:
   m_ObjectHideFlags: 0
