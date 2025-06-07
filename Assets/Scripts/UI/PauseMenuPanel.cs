@@ -1,5 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using System;
+using System.Collections.Generic;
 using TMPro;
 
 namespace KingdomClash.UI
@@ -198,10 +201,10 @@ namespace KingdomClash.UI
             // Resume normal time scale before scene transition
             Time.timeScale = 1;
             
-            // Load the save scene
-            UnityEngine.SceneManagement.SceneManager.LoadScene(saveSceneName);
-            
-            // Note: The actual saving will happen in the SaveSceneUI script
+            // Capture game data before transitioning to save scene
+            CaptureGameDataForSave();
+
+            // The rest of the LoadScene logic is moved to CaptureGameDataForSave method
         }        /// <summary>
         /// Return to the main menu
         /// </summary>
@@ -355,5 +358,97 @@ namespace KingdomClash.UI
                 buttonContainer.SetActive(true);
             }
         }
+        
+        /// <summary>
+        /// Capture game data before transitioning to save scene
+        /// </summary>
+        private void CaptureGameDataForSave()
+        {
+            // Get current game data from GameManager
+            GameData gameData = null;
+            if (GameManager.Instance != null)
+            {
+                gameData = GameManager.Instance.GetCurrentGameData();
+                
+                // Make sure building data is updated
+                if (BuildingManager.Instance != null)
+                {
+                    // Force scan for buildings in game scene before saving
+                    Building[] allBuildings = FindObjectsOfType<Building>();
+                    
+                    if (allBuildings.Length > 0)
+                    {
+                        // Register all buildings
+                        foreach (Building b in allBuildings)
+                        {
+                            if (b != null)
+                            {
+                                BuildingManager.Instance.RegisterPlacedBuilding(b);
+                            }
+                        }
+                        
+                        // Save buildings to gameData
+                        BuildingManager.Instance.SavePlacedBuildings(gameData);
+                    }
+                }
+                
+                // Create a deep copy of the game data to prevent any reference issues
+                GameData deepCopy = new GameData();
+                
+                // Copy basic properties
+                deepCopy.playerName = gameData.playerName;
+                deepCopy.level = gameData.level;
+                deepCopy.dateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                deepCopy.resources = gameData.resources;
+                deepCopy.selectedCharacter = gameData.selectedCharacter;
+                deepCopy.cameraPosition = gameData.cameraPosition;
+                deepCopy.cameraRotation = gameData.cameraRotation;
+                deepCopy.cameraZoom = gameData.cameraZoom;
+                
+                // Deep copy buildings
+                deepCopy.placedBuildings = new List<BuildingData>();
+                if (gameData.placedBuildings != null)
+                {
+                    foreach (var building in gameData.placedBuildings)
+                    {
+                        if (building == null) continue;
+                        
+                        // Create a completely new BuildingData object
+                        BuildingData newBuildingData = new BuildingData();
+                        
+                        // Copy all properties
+                        newBuildingData.buildingName = building.buildingName;
+                        newBuildingData.prefabName = building.prefabName;
+                        newBuildingData.position = building.position;
+                        newBuildingData.rotation = building.rotation;
+                        newBuildingData.health = building.health;
+                        newBuildingData.maxHealth = building.maxHealth;
+                        newBuildingData.producesResources = building.producesResources;
+                        newBuildingData.resourceType = building.resourceType;
+                        newBuildingData.productionAmount = building.productionAmount;
+                        
+                        // Add to our copy
+                        deepCopy.placedBuildings.Add(newBuildingData);
+                        Debug.Log($"[PauseMenuPanel] Deep copied building: {newBuildingData.buildingName} at position ({newBuildingData.position?.x}, {newBuildingData.position?.y}, {newBuildingData.position?.z})");
+                    }
+                }
+                
+                // Set the pre-captured data for SaveSceneUI using our deep copy
+                // SaveSceneUI.PreCapturedGameData = deepCopy; - referensi tidak ditemukan, gunakan cara lain
+                
+                // Menggunakan alternatif dengan static GameData di GameManager
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.SetPreCapturedGameData(deepCopy);
+                }
+            }
+            else
+            {
+                Debug.LogError("GameManager not found! Cannot capture game data for save.");
+            }
+            
+            // Load save scene as usual
+            SceneManager.LoadScene(saveSceneName);
+        }
     }
-}
+    }

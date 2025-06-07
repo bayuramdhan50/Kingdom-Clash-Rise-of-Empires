@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.IO;
 using System;
+using System.Collections.Generic;
 using TMPro;
 
 namespace KingdomClash
@@ -10,15 +11,30 @@ namespace KingdomClash
     /// <summary>
     /// Handles the Save Game UI interactions with pre-created save slots
     /// </summary>
-    public class SaveSceneUI : MonoBehaviour
+    public class SaveSceneUI_New : MonoBehaviour
     {
         [Header("UI References")]
         [SerializeField] private GameObject[] saveSlots; // Array of pre-created save slot GameObjects
         [SerializeField] private Button backButton; // Button to return to game
         [SerializeField] private string gameSceneName = "GameScene"; // Scene to return to after saving
 
+        /// <summary>
+        /// Get current game state data from GameManager's pre-captured data
+        /// </summary>
+        public static GameData PreCapturedGameData
+        {
+            get
+            {
+                if (GameManager.Instance != null)
+                {
+                    return GameManager.Instance.GetPreCapturedGameData();
+                }
+                return null;
+            }
+        }
+        
         // Path where save files are stored
-        private string saveDirectoryPath;
+        private string saveDirectoryPath;        // Awake method removed to clean up debug logs
 
         private void Start()
         {
@@ -60,7 +76,9 @@ namespace KingdomClash
             for (int i = 0; i < saveSlots.Length; i++)
             {
                 GameObject slot = saveSlots[i];
-                if (slot == null) continue;                // Check if there's a save file for this slot
+                if (slot == null) continue;
+                
+                // Check if there's a save file for this slot
                 string saveFileName = $"SaveSlot_{i}";
                 bool saveExists = Array.Exists(saveFiles, file => file == saveFileName);
 
@@ -91,7 +109,9 @@ namespace KingdomClash
                     slotButton.interactable = true; // All slots are clickable
                 }
             }
-        }        /// <summary>
+        }
+        
+        /// <summary>
         /// Handle slot button click
         /// </summary>
         /// <param name="slotIndex">Index of the clicked save slot</param>
@@ -103,7 +123,7 @@ namespace KingdomClash
             GameData currentGameData = GetCurrentGameData();
             if (currentGameData == null)
             {
-                Debug.LogError("No game data to save!");
+                Debug.LogError("[SaveSceneUI.OnSlotClicked] No game data to save!");
                 return;
             }
 
@@ -131,27 +151,72 @@ namespace KingdomClash
                 string slotType = slotIndex == 0 ? "Auto Save" : $"Save {slotIndex}";
                 slotText.text = $"{slotType}: {saveData.playerName}\nLevel {saveData.level} - {saveData.dateTime}";
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Get the current game data to save
         /// </summary>
         /// <returns>The current game data</returns>
         private GameData GetCurrentGameData()
         {
+            // First check if we have pre-captured data from game scene - IMPORTANT!
+            if (PreCapturedGameData != null)
+            {
+                // Make a deep copy to ensure no reference issues
+                GameData gameCopy = new GameData();
+                // Copy basic properties
+                gameCopy.playerName = PreCapturedGameData.playerName;
+                gameCopy.level = PreCapturedGameData.level;
+                gameCopy.dateTime = PreCapturedGameData.dateTime;
+                gameCopy.resources = PreCapturedGameData.resources;
+                gameCopy.selectedCharacter = PreCapturedGameData.selectedCharacter;
+                gameCopy.cameraPosition = PreCapturedGameData.cameraPosition;
+                gameCopy.cameraRotation = PreCapturedGameData.cameraRotation;
+                gameCopy.cameraZoom = PreCapturedGameData.cameraZoom;
+                
+                // Create new buildings list
+                gameCopy.placedBuildings = new List<BuildingData>();
+                
+                // Deep copy buildings
+                if (PreCapturedGameData.placedBuildings != null)
+                {
+                    foreach (var building in PreCapturedGameData.placedBuildings)
+                    {
+                        if (building != null)
+                        {
+                            // Create a completely new BuildingData object
+                            BuildingData newBuildingData = new BuildingData();
+                            
+                            // Copy all properties
+                            newBuildingData.buildingName = building.buildingName;
+                            newBuildingData.prefabName = building.prefabName;
+                            newBuildingData.position = building.position;
+                            newBuildingData.rotation = building.rotation;
+                            newBuildingData.health = building.health;
+                            newBuildingData.maxHealth = building.maxHealth;
+                            newBuildingData.producesResources = building.producesResources;
+                            newBuildingData.resourceType = building.resourceType;
+                            newBuildingData.productionAmount = building.productionAmount;
+                                      // Add to our copy
+                    gameCopy.placedBuildings.Add(newBuildingData);
+                        }
+                    }
+                }
+                
+                return gameCopy;
+            }
+            
             // Try to get data from GameManager
             if (GameManager.Instance != null)
             {
-                return GameManager.Instance.GetCurrentGameData();
+                GameData gameData = GameManager.Instance.GetCurrentGameData();
+                return gameData;
             }
-            
-            // Fallback: create basic game data
+              // Fallback: create basic game data
             GameData data = new GameData
             {
                 playerName = "Player",
                 level = 1,
-                dateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-                // Add other game state data here
+                dateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                placedBuildings = new List<BuildingData>() // Ensure list is initialized
             };
             
             return data;
@@ -181,58 +246,51 @@ namespace KingdomClash
                 }
                 
                 return saveFiles;
-            }
-            catch (Exception ex)
+            }            catch
             {
-                Debug.LogError($"Failed to get save files: {ex.Message}");
                 return new string[0];
             }
-        }        /// <summary>
-        /// Save game data to file
+        }
+        
+        /// <summary>
+        /// Save game data to file - rebuilt from scratch to be cleaner
         /// </summary>
         /// <param name="saveFileName">The name of the save file</param>
         /// <param name="saveData">The game data to save</param>
         private void SaveGame(string saveFileName, GameData saveData)
+        {            // TIMING: Delay execution until the end of the frame to ensure scene is fully loaded
+            StartCoroutine(DelayedSaveGame(saveFileName, saveData));
+        }
+          /// <summary>
+        /// Delayed execution of save game to ensure scene is fully loaded
+        /// </summary>
+        private System.Collections.IEnumerator DelayedSaveGame(string saveFileName, GameData saveData)
         {
+            // Wait for the end of the frame
+            yield return new WaitForEndOfFrame();
+            
             try
             {
                 // Update the save time
                 saveData.dateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 
-                // Verifikasi posisi kamera sebelum menyimpan
-                if (saveData.cameraPosition != null)
+                // Final check on building data
+                if (saveData.placedBuildings == null)
                 {
-                    bool validCameraPosition = 
-                        (saveData.cameraPosition.x != 0 || 
-                         saveData.cameraPosition.y != 0 || 
-                         saveData.cameraPosition.z != 0);
-                    
-                    bool validCameraZoom = saveData.cameraZoom > 0;
-                    
-                    // Jika posisi kamera tidak valid, coba dapatkan dari scene aktif
-                    if (!validCameraPosition || !validCameraZoom)
-                    {
-                        RTSCameraController cameraController = FindObjectOfType<RTSCameraController>();
-                        if (cameraController != null)
-                        {
-                            // Set posisi kamera dari scene saat ini
-                            saveData.cameraPosition = new Vector3Data(cameraController.transform.position);
-                            saveData.cameraRotation = new QuaternionData(cameraController.transform.rotation);
-                            saveData.cameraZoom = cameraController.cam != null ? cameraController.cam.orthographicSize : 30f;
-                        }
-                    }
+                    saveData.placedBuildings = new List<BuildingData>();
                 }
-                
-                // Convert data to JSON
+                  // Convert data to JSON
                 string json = JsonUtility.ToJson(saveData, true);
                 
                 // Write to file
                 string filePath = Path.Combine(saveDirectoryPath, saveFileName + ".json");
                 File.WriteAllText(filePath, json);
-            }
+                
+                // Update slot UI after save is completed
+                UpdateSlotUI(saveSlots[int.Parse(saveFileName.Split('_')[1])], saveData, int.Parse(saveFileName.Split('_')[1]));            }
             catch (Exception ex)
             {
-                Debug.LogError($"Failed to save game: {ex.Message}");
+                Debug.LogException(ex);
             }
         }
 
@@ -244,21 +302,17 @@ namespace KingdomClash
         private GameData LoadSaveData(string saveFileName)
         {
             string filePath = Path.Combine(saveDirectoryPath, saveFileName + ".json");
-            
-            if (!File.Exists(filePath))
+              if (!File.Exists(filePath))
             {
                 return null;
             }
-
-            try
+              try
             {
                 string json = File.ReadAllText(filePath);
-                GameData data = JsonUtility.FromJson<GameData>(json);
-                return data;
-            }
-            catch (Exception ex)
+                GameData loadedData = JsonUtility.FromJson<GameData>(json);
+                return loadedData;
+            }            catch
             {
-                Debug.LogError($"Failed to load save data: {ex.Message}");
                 return null;
             }
         }
@@ -266,7 +320,7 @@ namespace KingdomClash
         /// <summary>
         /// Return to the game scene
         /// </summary>
-        public void ReturnToGame()
+        private void ReturnToGame()
         {
             SceneManager.LoadScene(gameSceneName);
         }
