@@ -36,6 +36,9 @@ namespace KingdomClash
         private float lastAutoSaveTime = 0f;
         private Resources lastResourceState;
 
+        // Static property untuk menyimpan data game antar scene
+        private static GameData preCapturedData = null;
+
         public bool IsContinuing => isContinuing;
 
         private void Awake()
@@ -49,6 +52,24 @@ namespace KingdomClash
             
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            
+            // Subscribe to the scene loaded event
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+        
+        private void OnDestroy()
+        {
+            // Unsubscribe from the scene loaded event
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+        
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // Check if this is the game scene
+            if (scene.name == gameSceneName)
+            {
+                HandleGameSceneLoaded();
+            }
         }
 
         private void Start()
@@ -184,6 +205,9 @@ namespace KingdomClash
             };
             lastAutoSaveTime = Time.time;
             
+            // Initialize empty list of buildings
+            currentGameData.placedBuildings = new System.Collections.Generic.List<BuildingData>();
+            
             // Set the flag to indicate this is a new game, not a continuation
             isContinuing = false;
             
@@ -216,6 +240,13 @@ namespace KingdomClash
             
             // Set the flag to indicate we are continuing a saved game
             isContinuing = true;
+            
+            // Initialize building list if it's null (backwards compatibility with older saves)
+            if (currentGameData.placedBuildings == null)
+            {
+                currentGameData.placedBuildings = new System.Collections.Generic.List<BuildingData>();
+            }
+            
             SceneManager.LoadScene(gameSceneName);
         }
 
@@ -338,6 +369,36 @@ namespace KingdomClash
         /// </summary>
         private void UpdateGameData()
         {
+            // Save placed buildings data if building manager exists
+            if (BuildingManager.Instance != null)
+            {
+                // Log untuk membantu debugging
+                Debug.Log($"Updating GameData. BuildingManager has {BuildingManager.Instance.GetPlacedBuildingCount()} buildings registered.");
+                BuildingManager.Instance.SavePlacedBuildings(currentGameData);
+            }
+            else
+            {
+                Debug.LogError("BuildingManager.Instance is null during UpdateGameData!");
+                
+                // Coba cari dan buat BuildingManager jika tidak ada
+                if (FindObjectOfType<BuildingManager>() == null)
+                {
+                    Debug.Log("Creating BuildingManager during UpdateGameData...");
+                    GameObject buildingManagerObj = new GameObject("BuildingManager");
+                    BuildingManager newManager = buildingManagerObj.AddComponent<BuildingManager>();
+                    
+                    // Coba scan semua bangunan yang ada di scene
+                    Building[] allBuildingsInScene = FindObjectsOfType<Building>();
+                    foreach (Building building in allBuildingsInScene)
+                    {
+                        newManager.RegisterPlacedBuilding(building);
+                    }
+                    
+                    // Save buildings dengan manager yang baru dibuat
+                    newManager.SavePlacedBuildings(currentGameData);
+                }
+            }
+            
             // Save camera state if camera controller exists
             RTSCameraController cameraController = FindObjectOfType<RTSCameraController>();
             if (cameraController != null)
@@ -413,6 +474,71 @@ namespace KingdomClash
             #else
                 Application.Quit();
             #endif
+        }
+
+        /// <summary>
+        /// Menangani inisialisasi ketika game scene dimuat
+        /// Dipanggil sebagai event dari OnSceneLoaded
+        /// </summary>
+        private void HandleGameSceneLoaded()
+        {
+            Debug.Log("Game scene loaded, initializing...");
+            
+            // Jika kita melakukan reload dari save, muat bangunan yang sudah dibangun
+            if (isContinuing && currentGameData != null && currentGameData.placedBuildings != null && 
+                currentGameData.placedBuildings.Count > 0)
+            {
+                Debug.Log($"Loading {currentGameData.placedBuildings.Count} buildings from save data");
+                
+                // Tunggu sedikit untuk memastikan BuildingManager sudah ter-initialize
+                StartCoroutine(LoadBuildingsWithDelay());
+            }
+        }
+        
+        /// <summary>
+        /// Coroutine untuk memuat bangunan dengan sedikit delay
+        /// untuk memastikan BuildingManager sudah ter-inisialisasi
+        /// </summary>
+        private System.Collections.IEnumerator LoadBuildingsWithDelay()
+        {
+            // Tunggu satu frame untuk memastikan semua manager sudah ter-inisialisasi
+            yield return null;
+            
+            // Pastikan BuildingManager ada
+            if (BuildingManager.Instance == null)
+            {
+                Debug.LogWarning("BuildingManager not found, creating one...");
+                GameObject buildingManagerObj = new GameObject("BuildingManager");
+                buildingManagerObj.AddComponent<BuildingManager>();
+            }
+            
+            // Load bangunan dari save data
+            if (BuildingManager.Instance != null)
+            {
+                BuildingManager.Instance.LoadPlacedBuildings(currentGameData);
+                Debug.Log($"Loaded {currentGameData.placedBuildings.Count} buildings successfully");
+            }
+            else
+            {
+                Debug.LogError("Failed to create or find BuildingManager!");
+            }
+        }
+
+        /// <summary>
+        /// Set pre-captured game data untuk digunakan di SaveScene
+        /// </summary>
+        /// <param name="data">Data game yang akan disimpan</param>
+        public void SetPreCapturedGameData(GameData data)
+        {
+            preCapturedData = data;
+        }
+        
+        /// <summary>
+        /// Get pre-captured game data untuk digunakan di SaveScene
+        /// </summary>
+        public GameData GetPreCapturedGameData()
+        {
+            return preCapturedData;
         }
     }
 }

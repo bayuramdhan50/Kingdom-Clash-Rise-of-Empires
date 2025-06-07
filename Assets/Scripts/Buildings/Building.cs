@@ -41,7 +41,18 @@ namespace KingdomClash
                     healthBar.SetTargetBuilding(this);
                 }
             }
-        }        private void OnMouseDown()
+            
+            // Auto-register dengan BuildingManager
+            if (BuildingManager.Instance != null)
+            {
+                BuildingManager.Instance.RegisterPlacedBuilding(this);
+            }
+            else
+            {
+                // Jika tidak ada BuildingManager, buat dan register
+                BuildingManager.EnsureInstance().RegisterPlacedBuilding(this);
+            }
+        }private void OnMouseDown()
         {
             // Gunakan BuildingPanel singleton instance
             if (BuildingPanel.Instance != null)
@@ -106,7 +117,7 @@ namespace KingdomClash
             }
         }
         
-        /// <summary>
+    /// <summary>
         /// Menghancurkan bangunan
         /// </summary>
         public void DestroyBuilding()
@@ -116,6 +127,12 @@ namespace KingdomClash
             if (BuildingPanel.Instance != null && BuildingPanel.Instance.gameObject.activeSelf)
             {
                 BuildingPanel.Instance.ClosePanel();
+            }
+            
+            // Unregister dari BuildingManager
+            if (BuildingManager.Instance != null)
+            {
+                BuildingManager.Instance.UnregisterBuilding(this);
             }
             
             // Hapus bangunan
@@ -151,6 +168,28 @@ namespace KingdomClash
         public string GetBuildingDescription()
         {
             return buildingDescription;
+        }
+        
+        /// <summary>
+        /// Mengatur health bangunan (untuk loading dari save)
+        /// </summary>
+        public void SetHealth(int newHealth)
+        {
+            health = Mathf.Clamp(newHealth, 0, maxHealth);
+            
+            // Update health bar jika ada
+            if (healthBar != null)
+            {
+                healthBar.ShowTemporary();
+            }
+        }
+        /// <summary>
+        /// Mendapatkan informasi lengkap tentang produksi resource bangunan ini
+        /// </summary>
+        /// <returns>Tuple berisi (apakah menghasilkan resource, tipe resource, jumlah produksi)</returns>
+        public (bool producesResources, string resourceType, int amount) GetResourceProductionInfo()
+        {
+            return (producesResources, resourceType, productionAmount);
         }
     }
 }

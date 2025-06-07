@@ -144,12 +144,33 @@ namespace KingdomClash
             // Periksa apakah posisi valid
             if (Physics.Raycast(ray, out hit, raycastDistance, groundLayer) && 
                 !IsOverlappingWithOtherBuildings(hit.point))
-            {
-                // Buat bangunan actual
+            {                // Buat bangunan actual
                 GameObject placedBuilding = Instantiate(buildingPrefab, hit.point, Quaternion.Euler(buildingRotation));
                 
                 // Kembalikan material normal dan aktifkan collider
                 ResetObject(placedBuilding);
+                
+                // Registrasi bangunan ke BuildingManager untuk disimpan nantinya
+                Building buildingComponent = placedBuilding.GetComponent<Building>();
+                if (buildingComponent != null)
+                {
+                    if (BuildingManager.Instance != null)
+                    {
+                        BuildingManager.Instance.RegisterPlacedBuilding(buildingComponent);
+                        Debug.Log($"Building {buildingComponent.GetBuildingName()} registered with BuildingManager.");
+                        
+                        // Log jumlah bangunan terdaftar untuk memastikan
+                        Debug.Log($"Total registered buildings: {BuildingManager.Instance.GetPlacedBuildingCount()}");
+                    }
+                    else
+                    {
+                        Debug.LogError("BuildingManager.Instance is null! Cannot register building.");
+                    }
+                }
+                else
+                {
+                    Debug.LogError("Placed building does not have Building component!");
+                }
                 
                 // Hentikan mode penempatan
                 isPlacingBuilding = false;
