@@ -1,4 +1,5 @@
 using UnityEngine;
+using KingdomClash.UI;
 
 namespace KingdomClash
 {
@@ -19,13 +20,41 @@ namespace KingdomClash
         [SerializeField] private int productionAmount = 0;
         [SerializeField] private float productionInterval = 60f; // dalam detik
         
-        private float lastProductionTime = 0f;
+        [Header("References")]
+        [SerializeField] private BuildingHealthBar healthBar;
+          // Tidak perlu lagi static reference karena kita akan menggunakan BuildingPanel.Instance
         
-        private void Start()
+        // References
+        private float lastProductionTime = 0f;        private void Start()
         {
             lastProductionTime = Time.time;
+            
+            // Buat health bar jika tidak ada
+            if (healthBar == null)
+            {
+                // Cari di child
+                healthBar = GetComponentInChildren<BuildingHealthBar>();
+                
+                if (healthBar != null)
+                {
+                    // Setup health bar dengan referensi ke bangunan ini
+                    healthBar.SetTargetBuilding(this);
+                }
+            }
+        }        private void OnMouseDown()
+        {
+            // Gunakan BuildingPanel singleton instance
+            if (BuildingPanel.Instance != null)
+            {
+                BuildingPanel.Instance.ShowBuildingInfo(this);
+            }
+            
+            // Tampilkan health bar ketika bangunan diklik
+            if (healthBar != null)
+            {
+                healthBar.ShowTemporary();
+            }
         }
-        
         private void Update()
         {
             // Produksi resource jika waktunya
@@ -50,13 +79,26 @@ namespace KingdomClash
                 Debug.Log($"{buildingName} menghasilkan {productionAmount} {resourceType}");
             }
         }
-        
-        /// <summary>
+          /// <summary>
         /// Menerima damage saat bangunan diserang
         /// </summary>
         public void TakeDamage(int amount)
         {
             health -= amount;
+            
+            // Pastikan health tidak kurang dari 0
+            health = Mathf.Max(0, health);
+            
+            // Update health bar
+            if (healthBar != null)
+            {
+                healthBar.ShowTemporary();
+            }
+              // Update panel info jika terbuka
+            if (BuildingPanel.Instance != null && BuildingPanel.Instance.gameObject.activeSelf)
+            {
+                BuildingPanel.Instance.UpdateInfo();
+            }
             
             if (health <= 0)
             {
@@ -67,9 +109,14 @@ namespace KingdomClash
         /// <summary>
         /// Menghancurkan bangunan
         /// </summary>
-        private void DestroyBuilding()
+        public void DestroyBuilding()
         {
             // Efek penghancuran bisa ditambahkan di sini
+              // Tutup panel info jika terbuka
+            if (BuildingPanel.Instance != null && BuildingPanel.Instance.gameObject.activeSelf)
+            {
+                BuildingPanel.Instance.ClosePanel();
+            }
             
             // Hapus bangunan
             Destroy(gameObject);
@@ -90,13 +137,20 @@ namespace KingdomClash
         {
             return health;
         }
-        
-        /// <summary>
+          /// <summary>
         /// Mendapatkan health maksimum bangunan
         /// </summary>
         public int GetMaxHealth()
         {
             return maxHealth;
+        }
+        
+        /// <summary>
+        /// Mendapatkan deskripsi bangunan
+        /// </summary>
+        public string GetBuildingDescription()
+        {
+            return buildingDescription;
         }
     }
 }

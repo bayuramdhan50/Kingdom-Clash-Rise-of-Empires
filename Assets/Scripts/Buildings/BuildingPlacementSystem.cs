@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 namespace KingdomClash
 {
@@ -14,17 +15,18 @@ namespace KingdomClash
         [Header("Pengaturan Penempatan")]
         [SerializeField] private LayerMask groundLayer; // Layer untuk tanah
         [SerializeField] private float raycastDistance = 1000f;
-        [SerializeField] private Vector3 buildingRotation = new Vector3(0, 0, 0); // Rotasi default
-
-        // Materials untuk preview
-        private Material validPlacementMaterial;
-        private Material invalidPlacementMaterial;
+        [SerializeField] private Vector3 buildingRotation = new Vector3(0, 0, 0); // Rotasi default        // Warna untuk preview
+        [SerializeField] private Color validPlacementColor = new Color(0.0f, 1.0f, 0.0f, 0.5f); // Hijau transparan
+        [SerializeField] private Color invalidPlacementColor = new Color(1.0f, 0.0f, 0.0f, 0.5f); // Merah transparan
 
         // References
         private GameObject currentBuildingPreview;
         private GameObject buildingPrefab;
         private bool isPlacingBuilding = false;
         private Camera mainCamera;
+        
+        // Untuk menyimpan material asli
+        private Dictionary<Renderer, Material[]> originalMaterials = new Dictionary<Renderer, Material[]>();
 
         private void Awake()
         {
@@ -35,44 +37,11 @@ namespace KingdomClash
                 return;
             }
             Instance = this;
-
-            // Buat material default
-            CreateDefaultMaterials();
         }
 
         private void Start()
         {
             mainCamera = Camera.main;
-        }
-
-        /// <summary>
-        /// Buat material default untuk preview
-        /// </summary>
-        private void CreateDefaultMaterials()
-        {
-            // Material valid (hijau)
-            validPlacementMaterial = new Material(Shader.Find("Standard"));
-            validPlacementMaterial.color = new Color(0.0f, 1.0f, 0.0f, 0.5f);
-            SetupTransparentMaterial(validPlacementMaterial);
-
-            // Material tidak valid (merah)
-            invalidPlacementMaterial = new Material(Shader.Find("Standard"));
-            invalidPlacementMaterial.color = new Color(1.0f, 0.0f, 0.0f, 0.5f);
-            SetupTransparentMaterial(invalidPlacementMaterial);
-        }
-
-        /// <summary>
-        /// Setup material untuk transparansi
-        /// </summary>
-        private void SetupTransparentMaterial(Material material)
-        {
-            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            material.SetInt("_ZWrite", 0);
-            material.DisableKeyword("_ALPHATEST_ON");
-            material.EnableKeyword("_ALPHABLEND_ON");
-            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            material.renderQueue = 3000;
         }
 
         private void Update()
@@ -93,9 +62,7 @@ namespace KingdomClash
             {
                 CancelPlacement();
             }
-        }
-        
-        /// <summary>
+        }        /// <summary>
         /// Mulai proses penempatan untuk bangunan baru
         /// </summary>
         public void StartPlacement(GameObject prefab)
@@ -115,16 +82,36 @@ namespace KingdomClash
             // Buat preview bangunan
             currentBuildingPreview = Instantiate(buildingPrefab);
             
-            // Buat preview transparan
+            // Simpan material asli dan buat preview transparan
+            SaveOriginalMaterials(currentBuildingPreview);
             MakeObjectTransparent(currentBuildingPreview, 0.5f);
             
             // Nonaktifkan collider untuk preview
             ToggleColliders(currentBuildingPreview, false);
-
-            Debug.Log($"Placing building: {buildingPrefab.name}");
         }
         
         /// <summary>
+        /// Simpan material asli dari objek
+        /// </summary>
+        private void SaveOriginalMaterials(GameObject obj)
+        {
+            originalMaterials.Clear();
+            
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+            foreach (Renderer renderer in renderers)
+            {
+                // Duplikasi material asli agar bisa dikembalikan nanti
+                Material[] originalMats = renderer.materials;
+                Material[] matsCopy = new Material[originalMats.Length];
+                
+                for (int i = 0; i < originalMats.Length; i++)
+                {
+                    matsCopy[i] = new Material(originalMats[i]);
+                }
+                
+                originalMaterials.Add(renderer, matsCopy);
+            }
+        }        /// <summary>
         /// Update posisi preview bangunan berdasarkan posisi mouse
         /// </summary>
         private void UpdateBuildingPreviewPosition()
@@ -132,23 +119,21 @@ namespace KingdomClash
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            // Cek apakah raycast mengenai tanah
-            bool validPosition = Physics.Raycast(ray, out hit, raycastDistance, groundLayer) && 
-                               !IsOverlappingWithOtherBuildings(hit.point);
-
-            // Pindahkan preview ke titik hit
+            // Pertama, cek apakah raycast mengenai tanah
             if (Physics.Raycast(ray, out hit, raycastDistance, groundLayer))
             {
+                // Pindahkan preview ke titik hit
                 currentBuildingPreview.transform.position = hit.point;
                 currentBuildingPreview.transform.rotation = Quaternion.Euler(buildingRotation);
                 
-                // Atur material sesuai validitas posisi
-                Material previewMaterial = validPosition ? validPlacementMaterial : invalidPlacementMaterial;
-                ApplyMaterialToObject(currentBuildingPreview, previewMaterial);
+                // Cek apakah posisi valid (tidak tumpang tindih)
+                bool validPosition = !IsOverlappingWithOtherBuildings(hit.point);
+                
+                // Atur warna sesuai validitas posisi
+                Color previewColor = validPosition ? validPlacementColor : invalidPlacementColor;
+                ApplyColorToObject(currentBuildingPreview, previewColor);
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Tempatkan bangunan pada posisi saat ini
         /// </summary>
         private void PlaceBuilding()
@@ -172,12 +157,8 @@ namespace KingdomClash
                 // Hapus preview
                 Destroy(currentBuildingPreview);
                 currentBuildingPreview = null;
-
-                Debug.Log($"Building placed: {buildingPrefab.name}");
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Batalkan penempatan bangunan
         /// </summary>
         public void CancelPlacement()
@@ -188,26 +169,30 @@ namespace KingdomClash
                 currentBuildingPreview = null;
             }
             isPlacingBuilding = false;
-            
-            Debug.Log("Building placement canceled");
-        }
-
-        /// <summary>
+        }/// <summary>
         /// Periksa apakah bangunan akan tumpang tindih dengan bangunan lain
         /// </summary>
         private bool IsOverlappingWithOtherBuildings(Vector3 position)
         {
             Collider buildingCollider = buildingPrefab.GetComponentInChildren<Collider>();
             if (buildingCollider == null)
+            {
                 return false;
+            }
 
+            // Posisi kotak pengecekan relatif terhadap posisi penempatan
+            Vector3 checkPosition = position;
+            // Ukuran kotak pengecekan berdasarkan bounds collider
+            Vector3 checkSize = buildingCollider.bounds.extents * 0.9f;
+            
             // Periksa apakah ada collider lain di area penempatan
             Collider[] colliders = Physics.OverlapBox(
-                position + buildingCollider.bounds.center, 
-                buildingCollider.bounds.extents * 0.9f, 
+                checkPosition, 
+                checkSize, 
                 Quaternion.Euler(buildingRotation)
             );
 
+            // Uji setiap collider yang ditemukan
             foreach (var collider in colliders)
             {
                 // Lewati preview dan child-nya
@@ -217,8 +202,9 @@ namespace KingdomClash
                 {
                     continue;
                 }
-
-                // Jika ada objek dengan tag Building atau komponen Building
+                
+                // Pengecekan untuk semua jenis collider yang mungkin mengganggu penempatan
+                // Misalnya bangunan lain, terrain features, dll.
                 if (collider.CompareTag("Building") || collider.GetComponent<Building>() != null)
                 {
                     return true; // Ada tumpang tindih
@@ -226,10 +212,8 @@ namespace KingdomClash
             }
             
             return false; // Tidak ada tumpang tindih
-        }
-
-        /// <summary>
-        /// Buat objek transparan
+        }        /// <summary>
+        /// Buat objek transparan dengan mengubah warna
         /// </summary>
         private void MakeObjectTransparent(GameObject obj, float alpha)
         {
@@ -239,32 +223,44 @@ namespace KingdomClash
                 Material[] mats = renderer.materials;
                 for (int i = 0; i < mats.Length; i++)
                 {
+                    // Aktifkan transparansi untuk shader standar
+                    mats[i].SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                    mats[i].SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                    mats[i].SetInt("_ZWrite", 0);
+                    mats[i].DisableKeyword("_ALPHATEST_ON");
+                    mats[i].EnableKeyword("_ALPHABLEND_ON");
+                    mats[i].DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                    mats[i].renderQueue = 3000;
+                    
+                    // Buat transparan
                     Color color = mats[i].color;
                     mats[i].color = new Color(color.r, color.g, color.b, alpha);
-                    SetupTransparentMaterial(mats[i]);
                 }
                 renderer.materials = mats;
             }
-        }
-        
-        /// <summary>
-        /// Terapkan material ke semua renderer di objek
+        }        /// <summary>
+        /// Terapkan warna ke semua renderer di objek
         /// </summary>
-        private void ApplyMaterialToObject(GameObject obj, Material material)
+        private void ApplyColorToObject(GameObject obj, Color color)
         {
             Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+            
             foreach (Renderer renderer in renderers)
             {
-                Material[] mats = new Material[renderer.materials.Length];
+                Material[] mats = renderer.materials;
                 for (int i = 0; i < mats.Length; i++)
                 {
-                    mats[i] = material;
+                    // Pastikan warna alpha dipertahankan
+                    float alpha = mats[i].color.a;  // Simpan alpha asli
+                    mats[i].color = new Color(color.r, color.g, color.b, alpha);
+                    
+                    // Alternatif cara 2: gunakan properti _Color langsung
+                    mats[i].SetColor("_Color", color);
                 }
                 renderer.materials = mats;
             }
         }
-        
-        /// <summary>
+          /// <summary>
         /// Reset objek kembali ke keadaan normal
         /// </summary>
         private void ResetObject(GameObject obj)
@@ -272,11 +268,26 @@ namespace KingdomClash
             // Aktifkan collider
             ToggleColliders(obj, true);
             
-            // Reset material jika diperlukan
+            // Reset warna ke warna normal
             Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
             foreach (Renderer renderer in renderers)
             {
-                // Reset material dilakukan secara otomatis karena kita membuat objek baru
+                Material[] mats = renderer.materials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    // Kembalikan warna ke normal (tidak transparan)
+                    Color color = mats[i].color;
+                    mats[i].color = new Color(color.r, color.g, color.b, 1.0f);
+                    
+                    // Matikan transparansi
+                    mats[i].SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                    mats[i].SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                    mats[i].SetInt("_ZWrite", 1);
+                    mats[i].DisableKeyword("_ALPHATEST_ON");
+                    mats[i].DisableKeyword("_ALPHABLEND_ON");
+                    mats[i].DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                    mats[i].renderQueue = -1;
+                }
             }
         }
         
