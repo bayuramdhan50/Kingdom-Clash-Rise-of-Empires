@@ -138,7 +138,76 @@ namespace KingdomClash
         public Resources resources;
         public Characters.CharacterType selectedCharacter;
         public string dateTime = System.DateTime.Now.ToString();
+        
+        // Camera data
+        public Vector3Data cameraPosition;
+        public QuaternionData cameraRotation;
+        public float cameraZoom;
+        
         // Add more game state variables as needed
+    }
+    
+    /// <summary>
+    /// Serializable version of Vector3 for JSON storage
+    /// </summary>
+    [System.Serializable]
+    public class Vector3Data
+    {
+        public float x;
+        public float y;
+        public float z;
+        
+        public Vector3Data(float x, float y, float z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+        
+        public Vector3Data(Vector3 vector)
+        {
+            x = vector.x;
+            y = vector.y;
+            z = vector.z;
+        }
+        
+        public Vector3 ToVector3()
+        {
+            return new Vector3(x, y, z);
+        }
+    }
+    
+    /// <summary>
+    /// Serializable version of Quaternion for JSON storage
+    /// </summary>
+    [System.Serializable]
+    public class QuaternionData
+    {
+        public float x;
+        public float y;
+        public float z;
+        public float w;
+        
+        public QuaternionData(float x, float y, float z, float w)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
+        
+        public QuaternionData(Quaternion quaternion)
+        {
+            x = quaternion.x;
+            y = quaternion.y;
+            z = quaternion.z;
+            w = quaternion.w;
+        }
+        
+        public Quaternion ToQuaternion()
+        {
+            return new Quaternion(x, y, z, w);
+        }
     }/// <summary>
     /// Stores resource information for the game
     /// </summary>

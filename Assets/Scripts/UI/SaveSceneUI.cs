@@ -91,9 +91,7 @@ namespace KingdomClash
                     slotButton.interactable = true; // All slots are clickable
                 }
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Handle slot button click
         /// </summary>
         /// <param name="slotIndex">Index of the clicked save slot</param>
@@ -114,9 +112,6 @@ namespace KingdomClash
 
             // Update the slot UI
             UpdateSlotUI(saveSlots[slotIndex], currentGameData, slotIndex);
-            
-            // Show confirmation message
-            Debug.Log($"Game saved to slot {slotIndex}");
         }
 
         /// <summary>
@@ -192,9 +187,7 @@ namespace KingdomClash
                 Debug.LogError($"Failed to get save files: {ex.Message}");
                 return new string[0];
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Save game data to file
         /// </summary>
         /// <param name="saveFileName">The name of the save file</param>
@@ -205,6 +198,30 @@ namespace KingdomClash
             {
                 // Update the save time
                 saveData.dateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                
+                // Verifikasi posisi kamera sebelum menyimpan
+                if (saveData.cameraPosition != null)
+                {
+                    bool validCameraPosition = 
+                        (saveData.cameraPosition.x != 0 || 
+                         saveData.cameraPosition.y != 0 || 
+                         saveData.cameraPosition.z != 0);
+                    
+                    bool validCameraZoom = saveData.cameraZoom > 0;
+                    
+                    // Jika posisi kamera tidak valid, coba dapatkan dari scene aktif
+                    if (!validCameraPosition || !validCameraZoom)
+                    {
+                        RTSCameraController cameraController = FindObjectOfType<RTSCameraController>();
+                        if (cameraController != null)
+                        {
+                            // Set posisi kamera dari scene saat ini
+                            saveData.cameraPosition = new Vector3Data(cameraController.transform.position);
+                            saveData.cameraRotation = new QuaternionData(cameraController.transform.rotation);
+                            saveData.cameraZoom = cameraController.cam != null ? cameraController.cam.orthographicSize : 30f;
+                        }
+                    }
+                }
                 
                 // Convert data to JSON
                 string json = JsonUtility.ToJson(saveData, true);
