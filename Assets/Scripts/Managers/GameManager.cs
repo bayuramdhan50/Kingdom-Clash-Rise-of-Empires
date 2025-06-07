@@ -171,6 +171,9 @@ namespace KingdomClash
             currentGameData.playerName = "Player";
             currentGameData.level = 1;
             
+            // For new games, camera data will be set when first saved
+            // Don't initialize with default values here, let the camera controller handle it
+            
             // Reset auto-save tracking
             lastResourceState = new Resources
             {
@@ -241,10 +244,25 @@ namespace KingdomClash
         {
             if (currentGameData != null)
             {
-                // Update data with current game state before saving
+                // Dapatkan posisi kamera terkini
+                RTSCameraController cameraController = FindObjectOfType<RTSCameraController>();
+                if (cameraController != null)
+                {
+                    // Simpan posisi kamera saat ini langsung ke GameData
+                    Vector3 currentPos = cameraController.transform.position;
+                    Quaternion currentRot = cameraController.transform.rotation;
+                    float currentZoom = cameraController.cam != null ? cameraController.cam.orthographicSize : 30f;
+                    
+                    // Simpan nilai-nilai ini langsung ke GameData
+                    currentGameData.cameraPosition = new Vector3Data(currentPos);
+                    currentGameData.cameraRotation = new QuaternionData(currentRot);
+                    currentGameData.cameraZoom = currentZoom;
+                }
+                
+                // Update data lainnya dengan state game saat ini
                 UpdateGameData();
                 
-                // Use SaveManager to save the data to the auto-save slot (0)
+                // Gunakan SaveManager untuk menyimpan data ke slot auto-save (0)
                 if (SaveManager.Instance != null)
                 {
                     SaveManager.Instance.SaveCurrentGame(currentGameData, 0);
@@ -291,9 +309,24 @@ namespace KingdomClash
         /// </summary>
         public void SaveGame()
         {
-            // Just update the game data before going to save screen
+            // Update the game data before going to save screen
             if (currentGameData != null)
             {
+                // Simpan posisi kamera saat ini langsung ke gameData sebelum beralih ke SaveScene
+                RTSCameraController cameraController = FindObjectOfType<RTSCameraController>();
+                if (cameraController != null)
+                {
+                    Vector3 currentPos = cameraController.transform.position;
+                    Quaternion currentRot = cameraController.transform.rotation;
+                    float currentZoom = cameraController.cam != null ? cameraController.cam.orthographicSize : 30f;
+                    
+                    // Simpan nilai kamera langsung ke GameData
+                    currentGameData.cameraPosition = new Vector3Data(currentPos);
+                    currentGameData.cameraRotation = new QuaternionData(currentRot);
+                    currentGameData.cameraZoom = currentZoom;
+                }
+                
+                // Update semua data permainan lainnya
                 UpdateGameData();
             }
             
@@ -305,9 +338,41 @@ namespace KingdomClash
         /// </summary>
         private void UpdateGameData()
         {
-            // This is where you would update the currentGameData with the latest game state
-            // For example, update resources, player progress, etc.
-            Debug.Log("Updating game data before save");
+            // Save camera state if camera controller exists
+            RTSCameraController cameraController = FindObjectOfType<RTSCameraController>();
+            if (cameraController != null)
+            {
+                // Ambil posisi kamera terkini sebelum menyimpan
+                Vector3 currentCameraPos = cameraController.transform.position;
+                Quaternion currentCameraRot = cameraController.transform.rotation;
+                float currentCameraZoom = cameraController.cam != null ? cameraController.cam.orthographicSize : 30f;
+                
+                // Validasi posisi kamera sebelum save
+                if (currentCameraPos == Vector3.zero)
+                {
+                    currentCameraPos = new Vector3(20f, 20f, 20f);
+                    cameraController.transform.position = currentCameraPos;
+                }
+                
+                // Validasi zoom
+                if (currentCameraZoom <= 0)
+                {
+                    currentCameraZoom = 30f;
+                    if (cameraController.cam != null)
+                        cameraController.cam.orthographicSize = currentCameraZoom;
+                }
+                
+                // Simpan state kamera
+                cameraController.SaveCameraState();
+                
+                // Langsung set nilai di GameData untuk memastikan nilai terkini tersimpan
+                if (currentGameData != null)
+                {
+                    currentGameData.cameraPosition = new Vector3Data(currentCameraPos);
+                    currentGameData.cameraRotation = new QuaternionData(currentCameraRot);
+                    currentGameData.cameraZoom = currentCameraZoom;
+                }
+            }
         }
 
         /// <summary>
