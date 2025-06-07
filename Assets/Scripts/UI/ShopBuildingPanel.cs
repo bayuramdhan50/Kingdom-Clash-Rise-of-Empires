@@ -101,9 +101,7 @@ namespace KingdomClash.UI
             {
                 buildingInfoPanel.ShowBuildingInfo(buildingItem);
             }
-        }
-        
-        /// <summary>
+        }        /// <summary>
         /// Called when a building is purchased
         /// </summary>
         /// <param name="buildingItem">The building item that was purchased</param>
@@ -121,22 +119,40 @@ namespace KingdomClash.UI
                 resources.stone >= buildingItem.stoneCost &&
                 resources.iron >= buildingItem.ironCost)
             {
-                // Deduct resources
-                GameManager.Instance.UpdateResource("wood", -buildingItem.woodCost);
-                GameManager.Instance.UpdateResource("stone", -buildingItem.stoneCost);
-                GameManager.Instance.UpdateResource("iron", -buildingItem.ironCost);
-                
-                // Here you would implement the actual building creation
-                Debug.Log($"Building purchased: {buildingItem.buildingName}");
-                
-                // Refresh HUD to show updated resources
-                if (hudPanel != null)
+                // Check if the building prefab exists
+                if (buildingItem.buildingPrefab == null)
                 {
-                    hudPanel.RefreshHUD();
+                    Debug.LogError($"Building prefab untuk {buildingItem.buildingName} tidak tersedia!");
+                    return;
                 }
                 
-                // Update UI based on new resource amounts
-                UpdateBuildingAvailability();
+                // Start building placement mode
+                if (BuildingPlacementSystem.Instance != null)
+                {
+                    // Kurangi sumber daya
+                    GameManager.Instance.UpdateResource("wood", -buildingItem.woodCost);
+                    GameManager.Instance.UpdateResource("stone", -buildingItem.stoneCost);
+                    GameManager.Instance.UpdateResource("iron", -buildingItem.ironCost);
+                    
+                    // Mulai proses penempatan
+                    BuildingPlacementSystem.Instance.StartPlacement(buildingItem.buildingPrefab);
+                    
+                    // Refresh HUD untuk menampilkan sumber daya yang diperbarui
+                    if (hudPanel != null)
+                    {
+                        hudPanel.RefreshHUD();
+                    }
+                    
+                    // Update UI berdasarkan jumlah sumber daya baru
+                    UpdateBuildingAvailability();
+                    
+                    // Tutup panel toko saat penempatan
+                    ClosePanel();
+                }
+                else
+                {
+                    Debug.LogError("BuildingPlacementSystem tidak ditemukan di scene!");
+                }
             }
         }
         
