@@ -3673,6 +3673,7 @@ GameObject:
   - component: {fileID: 8057410399064309465}
   - component: {fileID: 62483894184051659}
   - component: {fileID: 1290663277105356679}
+  - component: {fileID: 86325909395885663}
   m_Layer: 0
   m_Name: HighELF_Worker
   m_TagString: PlayerUnit
@@ -3793,6 +3794,28 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &86325909395885663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7020009931698475186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3adf35ec4221bde4aaab47ad31bc1536, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unitType: infantry
+  maxHealth: 100
+  attack: 10
+  defense: 10
+  moveSpeed: 5
+  gatherSpeed: 1
+  detectionRadius: 5
+  carryCapacity: 10
+  gatheringEffect: {fileID: 0}
+  resourceIndicator: {fileID: 0}
 --- !u!1 &7139529592549513672
 GameObject:
   m_ObjectHideFlags: 0
