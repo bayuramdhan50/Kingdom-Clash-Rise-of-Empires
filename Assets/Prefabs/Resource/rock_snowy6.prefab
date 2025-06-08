@@ -132,7 +132,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resourceType: iron
-  totalResource: 1000
+  totalResource: 10
   remainingResource: 0
   gatherAmount: 5
   gatherCooldown: 1.5
