@@ -199,5 +199,24 @@ namespace KingdomClash
         {
             return (producesResources, resourceType, productionAmount);
         }
+        
+        /// <summary>
+        /// Mendapatkan apakah bangunan ini adalah castle (tidak perlu menggunakan tag, gunakan class CastleBuilding)
+        /// </summary>
+        public virtual bool IsCastle()
+        {
+            return false;
+        }
+        
+        /// <summary>
+        /// Fungsi untuk mengatur health maksimal bangunan
+        /// </summary>
+        public void SetMaxHealth(int newMaxHealth)
+        {
+            maxHealth = newMaxHealth;
+            // Adjust current health if needed
+            if (health > maxHealth)
+                health = maxHealth;
+        }
     }
 }

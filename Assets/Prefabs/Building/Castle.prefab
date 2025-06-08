@@ -11,10 +11,10 @@ GameObject:
   - component: {fileID: 1131272558188040588}
   - component: {fileID: 7414213428913307486}
   - component: {fileID: 4636979100402699290}
-  - component: {fileID: 5535368354866734843}
+  - component: {fileID: 6092429836501297917}
   m_Layer: 0
   m_Name: Castle
-  m_TagString: Building
+  m_TagString: PlayerCastle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -85,7 +85,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &5535368354866734843
+--- !u!114 &6092429836501297917
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -94,19 +94,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 132644193742226365}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 11528332deaa9ba49ac1d95821c86c87, type: 3}
+  m_Script: {fileID: 11500000, guid: c377a2c362491e140831a019efe14ad5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   buildingName: Castle
   buildingDescription: 
-  health: 500
-  maxHealth: 500
+  health: 10
+  maxHealth: 10
   producesResources: 0
   resourceType: 
   productionAmount: 0
   productionInterval: 60
   healthBar: {fileID: 7643512275771006181, guid: c6ca9f59245da8145b4cb0a74a5074fc,
     type: 3}
+  isPlayerCastle: 1
 --- !u!1 &2075366945845230819
 GameObject:
   m_ObjectHideFlags: 0

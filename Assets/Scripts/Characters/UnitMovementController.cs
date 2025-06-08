@@ -61,8 +61,10 @@ namespace KingdomClash.Characters
                 RaycastHit hit;
 
                 if (Physics.Raycast(ray, out hit))
-                {                // Check if clicked on an enemy unit or building
-                if (hit.collider.CompareTag("EnemyUnit") || hit.collider.CompareTag("EnemyBuilding"))
+                {                // Check if clicked on an enemy unit, building or castle
+                if (hit.collider.CompareTag("EnemyUnit") || 
+                    hit.collider.CompareTag("EnemyBuilding") || 
+                    hit.collider.CompareTag("EnemyCastle"))
                 {
                     Transform attackTarget = hit.collider.transform;
                     
@@ -152,16 +154,19 @@ namespace KingdomClash.Characters
                 foreach (Collider collider in colliders)
                 {
                     bool isEnemy = false;
-                    
-                    // Check if this is an AI unit (enemy to player)
+                      // Check if this is an AI unit (enemy to player)
                     if (unitObject.CompareTag("EnemyUnit") && 
-                        (collider.CompareTag("PlayerUnit") || collider.CompareTag("Building")))
+                        (collider.CompareTag("PlayerUnit") || 
+                         collider.CompareTag("Building") || 
+                         collider.CompareTag("PlayerCastle")))
                     {
                         isEnemy = true;
                     }
                     // Check if this is a player unit (enemy to AI)
                     else if (unitObject.CompareTag("PlayerUnit") && 
-                            (collider.CompareTag("EnemyUnit") || collider.CompareTag("EnemyBuilding")))
+                            (collider.CompareTag("EnemyUnit") || 
+                             collider.CompareTag("EnemyBuilding") || 
+                             collider.CompareTag("EnemyCastle")))
                     {
                         isEnemy = true;
                     }
