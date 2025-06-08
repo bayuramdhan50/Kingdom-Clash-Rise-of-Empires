@@ -86,5 +86,16 @@ namespace KingdomClash.UI
                 foodDisplay.resourceText.text = "0";
             }
         }
+        
+        /// <summary>
+        /// Updates all resource displays using the current game data
+        /// </summary>
+        public void UpdateResourceDisplay()
+        {
+            if (GameManager.Instance == null || GameManager.Instance.GetCurrentGameData() == null)
+                return;
+                
+            UpdateResourceDisplay(GameManager.Instance.GetCurrentGameData().resources);
+        }
     }
 }

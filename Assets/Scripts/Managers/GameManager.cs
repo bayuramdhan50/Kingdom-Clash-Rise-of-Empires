@@ -205,8 +205,10 @@ namespace KingdomClash
             };
             lastAutoSaveTime = Time.time;
             
-            // Initialize empty list of buildings
+            // Initialize empty lists
             currentGameData.placedBuildings = new System.Collections.Generic.List<BuildingData>();
+            currentGameData.trainingProcesses = new System.Collections.Generic.List<TrainingData>();
+            currentGameData.units = new System.Collections.Generic.List<UnitData>();
             
             // Set the flag to indicate this is a new game, not a continuation
             isContinuing = false;
@@ -399,6 +401,13 @@ namespace KingdomClash
                 }
             }
             
+            // Save training state if TrainingManager exists
+            if (UI.TrainingManager.Instance != null)
+            {
+                Debug.Log("Saving training state to GameData.");
+                UI.TrainingManager.Instance.SaveTrainingState();
+            }
+            
             // Save camera state if camera controller exists
             RTSCameraController cameraController = FindObjectOfType<RTSCameraController>();
             if (cameraController != null)
@@ -482,19 +491,56 @@ namespace KingdomClash
         /// </summary>
         private void HandleGameSceneLoaded()
         {
-            Debug.Log("Game scene loaded, initializing...");
-            
             // Jika kita melakukan reload dari save, muat bangunan yang sudah dibangun
-            if (isContinuing && currentGameData != null && currentGameData.placedBuildings != null && 
-                currentGameData.placedBuildings.Count > 0)
+            if (isContinuing && currentGameData != null)
             {
-                Debug.Log($"Loading {currentGameData.placedBuildings.Count} buildings from save data");
+                // Muat bangunan
+                if (currentGameData.placedBuildings != null && currentGameData.placedBuildings.Count > 0)
+                {
+                    // Tunggu sedikit untuk memastikan BuildingManager sudah ter-initialize
+                    StartCoroutine(LoadBuildingsWithDelay());
+                }
                 
-                // Tunggu sedikit untuk memastikan BuildingManager sudah ter-initialize
-                StartCoroutine(LoadBuildingsWithDelay());
+                // Muat data training jika ada
+                if (currentGameData.trainingProcesses != null && currentGameData.trainingProcesses.Count > 0)
+                {
+                    // Tunggu sebentar untuk memastikan TrainingManager sudah ter-initialize
+                    StartCoroutine(LoadTrainingWithDelay());
+                }
+
+                // Muat data unit jika ada
+                if (currentGameData.units != null && currentGameData.units.Count > 0)
+                {
+                    // Tunggu sebentar untuk memastikan CharacterManager sudah ter-inisialisasi
+                    StartCoroutine(LoadUnitsWithDelay());
+                }
             }
         }
         
+        /// <summary>
+        /// Coroutine untuk memuat data training dengan sedikit delay
+        /// untuk memastikan TrainingManager sudah ter-inisialisasi
+        /// </summary>
+        private System.Collections.IEnumerator LoadTrainingWithDelay()
+        {
+            // Tunggu satu frame untuk memastikan semua manager sudah ter-inisialisasi
+            yield return null;
+            
+            // Pastikan TrainingManager ada
+            if (UI.TrainingManager.Instance == null)
+            {
+                // Create TrainingManager if not found
+                GameObject trainingManagerObj = new GameObject("TrainingManager");
+                trainingManagerObj.AddComponent<UI.TrainingManager>();
+            }
+            
+            // Load training data dari save data
+            if (UI.TrainingManager.Instance != null)
+            {
+                UI.TrainingManager.Instance.LoadTrainingState();
+            }
+        }
+
         /// <summary>
         /// Coroutine untuk memuat bangunan dengan sedikit delay
         /// untuk memastikan BuildingManager sudah ter-inisialisasi
@@ -522,6 +568,45 @@ namespace KingdomClash
             {
                 Debug.LogError("Failed to create or find BuildingManager!");
             }
+        }
+
+        /// <summary>
+        /// Coroutine untuk memuat unit dengan sedikit delay
+        /// untuk memastikan CharacterManager sudah ter-inisialisasi
+        /// </summary>
+        private System.Collections.IEnumerator LoadUnitsWithDelay()
+        {
+            // Tunggu satu frame untuk memastikan semua manager sudah ter-inisialisasi
+            yield return null;
+            yield return null;  // Extra frame for other systems
+            
+            // Pastikan kita memiliki data unit
+            if (currentGameData.units == null || currentGameData.units.Count == 0)
+            {
+                yield break;
+            }
+            
+            // Loading units from saved data
+            
+            // Reference ke TrainingManager untuk mengakses unit prefabs
+            UI.TrainingManager trainingManager = UI.TrainingManager.Instance;
+            
+            if (trainingManager == null)
+            {
+                // Create TrainingManager if not found
+                GameObject trainingManagerObj = new GameObject("TrainingManager");
+                trainingManager = trainingManagerObj.AddComponent<UI.TrainingManager>();
+                // Wait one more frame for TrainingManager to initialize
+                yield return null; 
+            }
+            
+            // Buat callback untuk memuat prefab unit
+            // Panel ini akan berisi komponen fungsi untuk memuat dan me-spawn unit
+            GameObject unitLoaderPanel = new GameObject("UnitLoaderPanel");
+            UnitLoaderPanel loaderPanel = unitLoaderPanel.AddComponent<UnitLoaderPanel>();
+            
+            // Mulai proses loading dan spawning unit
+            int loadedCount = loaderPanel.LoadSavedUnits(currentGameData.units);
         }
 
         /// <summary>

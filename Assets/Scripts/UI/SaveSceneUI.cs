@@ -11,7 +11,7 @@ namespace KingdomClash
     /// <summary>
     /// Handles the Save Game UI interactions with pre-created save slots
     /// </summary>
-    public class SaveSceneUI_New : MonoBehaviour
+    public class SaveSceneUI : MonoBehaviour
     {
         [Header("UI References")]
         [SerializeField] private GameObject[] saveSlots; // Array of pre-created save slot GameObjects
@@ -132,9 +132,7 @@ namespace KingdomClash
 
             // Update the slot UI
             UpdateSlotUI(saveSlots[slotIndex], currentGameData, slotIndex);
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Update the UI elements of a save slot
         /// </summary>
         /// <param name="slot">The slot GameObject to update</param>
@@ -149,9 +147,27 @@ namespace KingdomClash
             if (slotText != null)
             {
                 string slotType = slotIndex == 0 ? "Auto Save" : $"Save {slotIndex}";
-                slotText.text = $"{slotType}: {saveData.playerName}\nLevel {saveData.level} - {saveData.dateTime}";
+                
+                // Count buildings, units and training
+                int buildingCount = saveData.placedBuildings?.Count ?? 0;
+                int unitCount = saveData.units?.Count ?? 0;
+                int trainingCount = 0;
+                
+                // Count total units in training
+                if (saveData.trainingProcesses != null)
+                {
+                    foreach (var training in saveData.trainingProcesses)
+                    {
+                        trainingCount += training.count;
+                    }
+                }
+                
+                // Format the text with more information
+                slotText.text = $"{slotType}: {saveData.playerName}\n" +
+                               $"Level {saveData.level} - {saveData.dateTime}\n" +
+                               $"Buildings: {buildingCount} | Units: {unitCount} | Training: {trainingCount}";
             }
-        }        /// <summary>
+        }/// <summary>
         /// Get the current game data to save
         /// </summary>
         /// <returns>The current game data</returns>
@@ -195,11 +211,15 @@ namespace KingdomClash
                             newBuildingData.producesResources = building.producesResources;
                             newBuildingData.resourceType = building.resourceType;
                             newBuildingData.productionAmount = building.productionAmount;
-                                      // Add to our copy
-                    gameCopy.placedBuildings.Add(newBuildingData);
+                            
+                            // Add to our copy
+                            gameCopy.placedBuildings.Add(newBuildingData);
                         }
                     }
                 }
+                
+                // Save training data and units manually
+                SaveTrainingDataAndUnits(gameCopy);
                 
                 return gameCopy;
             }
@@ -260,8 +280,7 @@ namespace KingdomClash
         private void SaveGame(string saveFileName, GameData saveData)
         {            // TIMING: Delay execution until the end of the frame to ensure scene is fully loaded
             StartCoroutine(DelayedSaveGame(saveFileName, saveData));
-        }
-          /// <summary>
+        }        /// <summary>
         /// Delayed execution of save game to ensure scene is fully loaded
         /// </summary>
         private System.Collections.IEnumerator DelayedSaveGame(string saveFileName, GameData saveData)
@@ -274,20 +293,37 @@ namespace KingdomClash
                 // Update the save time
                 saveData.dateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 
-                // Final check on building data
+                // Final check on required data
                 if (saveData.placedBuildings == null)
                 {
                     saveData.placedBuildings = new List<BuildingData>();
                 }
-                  // Convert data to JSON
+                
+                if (saveData.units == null)
+                {
+                    saveData.units = new List<UnitData>();
+                }
+                
+                if (saveData.trainingProcesses == null)
+                {
+                    saveData.trainingProcesses = new List<TrainingData>();
+                }
+                
+                // One final check to ensure we have training data and units
+                SaveTrainingDataAndUnits(saveData);
+                
+                // Convert data to JSON
                 string json = JsonUtility.ToJson(saveData, true);
                 
                 // Write to file
                 string filePath = Path.Combine(saveDirectoryPath, saveFileName + ".json");
                 File.WriteAllText(filePath, json);
+                  Debug.Log($"Game saved to {filePath} with {saveData.placedBuildings.Count} buildings, " +
+                          $"{saveData.units.Count} units, and {saveData.trainingProcesses.Count} training processes.");
                 
                 // Update slot UI after save is completed
-                UpdateSlotUI(saveSlots[int.Parse(saveFileName.Split('_')[1])], saveData, int.Parse(saveFileName.Split('_')[1]));            }
+                UpdateSlotUI(saveSlots[int.Parse(saveFileName.Split('_')[1])], saveData, int.Parse(saveFileName.Split('_')[1]));
+            }
             catch (Exception ex)
             {
                 Debug.LogException(ex);
@@ -323,6 +359,94 @@ namespace KingdomClash
         private void ReturnToGame()
         {
             SceneManager.LoadScene(gameSceneName);
+        }
+
+        /// <summary>
+        /// Manually save training data and units from TrainingManager
+        /// </summary>
+        /// <param name="gameData">The game data to update with training and unit data</param>
+        private void SaveTrainingDataAndUnits(GameData gameData)
+        {
+            // Ensure lists are initialized
+            if (gameData.trainingProcesses == null)
+            {
+                gameData.trainingProcesses = new List<TrainingData>();
+            }
+            else
+            {
+                gameData.trainingProcesses.Clear();
+            }
+            
+            if (gameData.units == null)
+            {
+                gameData.units = new List<UnitData>();
+            }
+            
+            // Check if we have a TrainingManager instance
+            if (UI.TrainingManager.Instance != null)
+            {
+                // Tell the TrainingManager to save its state to GameManager
+                UI.TrainingManager.Instance.SaveTrainingState();
+                
+                // Get the saved training data from GameManager
+                if (GameManager.Instance != null && GameManager.Instance.GetCurrentGameData() != null)
+                {
+                    GameData currentData = GameManager.Instance.GetCurrentGameData();
+                    
+                    // Copy training processes
+                    if (currentData.trainingProcesses != null)
+                    {
+                        foreach (var trainingProcess in currentData.trainingProcesses)
+                        {
+                            // Create a new training data
+                            TrainingData newTraining = new TrainingData(
+                                trainingProcess.buildingName,
+                                trainingProcess.unitType,
+                                trainingProcess.count,
+                                trainingProcess.progress,
+                                trainingProcess.trainingTime
+                            );
+                            
+                            // Add to our copy
+                            gameData.trainingProcesses.Add(newTraining);
+                        }
+                        
+                        Debug.Log($"Manually saved {gameData.trainingProcesses.Count} training processes");
+                    }
+                    
+                    // Copy units
+                    if (currentData.units != null)
+                    {
+                        // Clear the units list first
+                        if (gameData.units == null)
+                        {
+                            gameData.units = new List<UnitData>();
+                        }
+                        
+                        foreach (var unit in currentData.units)
+                        {
+                            // Create a new unit data
+                            UnitData newUnit = new UnitData(
+                                unit.unitType,
+                                unit.health,
+                                unit.maxHealth,
+                                unit.attack,
+                                unit.defense,
+                                unit.position.ToVector3()
+                            );
+                            
+                            // Add to our copy
+                            gameData.units.Add(newUnit);
+                        }
+                        
+                        Debug.Log($"Manually saved {gameData.units.Count} units");
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogWarning("TrainingManager instance not found. Cannot save training data and units.");
+            }
         }
     }
 }
