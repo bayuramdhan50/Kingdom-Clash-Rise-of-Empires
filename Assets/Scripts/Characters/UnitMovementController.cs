@@ -61,11 +61,45 @@ namespace KingdomClash.Characters
                 RaycastHit hit;
 
                 if (Physics.Raycast(ray, out hit))
+                {                // Check if clicked on an enemy unit or building
+                if (hit.collider.CompareTag("EnemyUnit") || hit.collider.CompareTag("EnemyBuilding"))
                 {
-                    // Move all selected units to the clicked position
+                    Transform attackTarget = hit.collider.transform;
+                    
+                    // Attack the enemy or building
                     foreach (Unit unit in selectedUnits)
                     {
-                        unit.MoveTo(hit.point);
+                        // Move to target position, slightly closer for melee attack
+                        Vector3 movePosition = hit.point;
+                        if (unit.GetUnitType().ToLower().Contains("infantry") || 
+                            unit.GetUnitType().ToLower().Contains("cavalry"))
+                        {
+                            // For melee units, get closer to the target
+                            Vector3 direction = (movePosition - unit.transform.position).normalized;
+                            movePosition = hit.point - (direction * 2f); // Stay 2 units away from target
+                        }
+                        unit.MoveTo(movePosition);
+                        
+                        // Add combat component if not already present
+                        CombatSystem combatSystem = unit.GetComponent<CombatSystem>();
+                        if (combatSystem == null)
+                        {
+                            combatSystem = unit.gameObject.AddComponent<CombatSystem>();
+                        }
+                        
+                        // Explicitly set the target to attack
+                        combatSystem.SetTarget(attackTarget);
+                    }
+                    
+                    Debug.Log($"Units ordered to attack {hit.collider.gameObject.name}");
+                }
+                    else
+                    {
+                        // Move all selected units to the clicked position
+                        foreach (Unit unit in selectedUnits)
+                        {
+                            unit.MoveTo(hit.point);
+                        }
                     }
                 }
             }
@@ -87,6 +121,59 @@ namespace KingdomClash.Characters
                 unit.Deselect();
             }
             selectedUnits.Clear();
+        }        /// <summary>
+        /// AI command to move a unit to a specific location (used by SimpleAI)
+        /// This method is static to allow calling it from outside without needing a reference to this controller
+        /// </summary>
+        /// <param name="unit">The unit to command</param>
+        /// <param name="position">Target position to move to</param>
+        public static void AICommandMoveTo(GameObject unitObject, Vector3 position)
+        {
+            // This is a simplified method for AI use
+            // In a more complex implementation, you might have specialized AI movement controls
+            // that differ from player controls
+            
+            if (unitObject != null)
+            {
+                Unit unit = unitObject.GetComponent<Unit>();
+                if (unit != null)
+                {
+                    unit.MoveTo(position);
+                }
+                  // Add combat component if not already present (for automatic enemy detection during movement)
+                CombatSystem combatSystem = unitObject.GetComponent<CombatSystem>();
+                if (combatSystem == null)
+                {
+                    combatSystem = unitObject.AddComponent<CombatSystem>();
+                }
+                
+                // Check if there are attack targets at the destination
+                Collider[] colliders = Physics.OverlapSphere(position, 2f);
+                foreach (Collider collider in colliders)
+                {
+                    bool isEnemy = false;
+                    
+                    // Check if this is an AI unit (enemy to player)
+                    if (unitObject.CompareTag("EnemyUnit") && 
+                        (collider.CompareTag("PlayerUnit") || collider.CompareTag("Building")))
+                    {
+                        isEnemy = true;
+                    }
+                    // Check if this is a player unit (enemy to AI)
+                    else if (unitObject.CompareTag("PlayerUnit") && 
+                            (collider.CompareTag("EnemyUnit") || collider.CompareTag("EnemyBuilding")))
+                    {
+                        isEnemy = true;
+                    }
+                    
+                    // If we found an enemy target, set it
+                    if (isEnemy && combatSystem != null)
+                    {
+                        combatSystem.SetTarget(collider.transform);
+                        break;
+                    }
+                }
+            }
         }
     }
 }

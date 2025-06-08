@@ -3675,7 +3675,7 @@ GameObject:
   - component: {fileID: 1290663277105356679}
   m_Layer: 0
   m_Name: HighELF_Worker
-  m_TagString: Untagged
+  m_TagString: PlayerUnit
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

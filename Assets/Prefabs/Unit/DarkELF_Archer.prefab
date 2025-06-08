@@ -2668,9 +2668,10 @@ GameObject:
   - component: {fileID: 8560815796096947867}
   - component: {fileID: -3999311266383931518}
   - component: {fileID: 6280036696654504694}
+  - component: {fileID: 551363146774450421}
   m_Layer: 0
   m_Name: DarkELF_Archer
-  m_TagString: Untagged
+  m_TagString: PlayerUnit
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2805,6 +2806,22 @@ MonoBehaviour:
   attack: 10
   defense: 10
   moveSpeed: 5
+--- !u!114 &551363146774450421
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4883327788788358475}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a61963cb76d906499d52fae208653d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attackRange: 15
+  attackCooldown: 2
+  unitTag: PlayerUnit
+  enemyTag: EnemyUnit
 --- !u!1 &4947903080948007190
 GameObject:
   m_ObjectHideFlags: 0

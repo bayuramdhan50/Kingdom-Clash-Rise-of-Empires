@@ -32,6 +32,9 @@ namespace KingdomClash
         // Flag to indicate if we are continuing a saved game or starting a new game
         private bool isContinuing = false;
 
+        // Event for when a new game is started
+        public event System.Action OnNewGameStarted;
+
         // Auto-save tracking
         private float lastAutoSaveTime = 0f;
         private Resources lastResourceState;
@@ -212,6 +215,9 @@ namespace KingdomClash
             
             // Set the flag to indicate this is a new game, not a continuation
             isContinuing = false;
+            
+            // Notify listeners that a new game has started
+            OnNewGameStarted?.Invoke();
             
             // Load the game scene without auto-saving
             SceneManager.LoadScene(gameSceneName);
@@ -504,7 +510,7 @@ namespace KingdomClash
                 // Muat data training jika ada
                 if (currentGameData.trainingProcesses != null && currentGameData.trainingProcesses.Count > 0)
                 {
-                    // Tunggu sebentar untuk memastikan TrainingManager sudah ter-initialize
+                    // Tunggu sebentar untuk memastikan TrainingManager sudah ter-inisialisasi
                     StartCoroutine(LoadTrainingWithDelay());
                 }
 
@@ -514,6 +520,13 @@ namespace KingdomClash
                     // Tunggu sebentar untuk memastikan CharacterManager sudah ter-inisialisasi
                     StartCoroutine(LoadUnitsWithDelay());
                 }
+            }
+            else if (!isContinuing) 
+            {
+                // This is a new game, trigger the OnNewGameStarted event
+                // to set up the starter pack and AI
+                Debug.Log("New game started - triggering starter pack and AI setup");
+                OnNewGameStarted?.Invoke();
             }
         }
         
