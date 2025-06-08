@@ -22,6 +22,12 @@ namespace KingdomClash
         
         // Building data - list of all placed buildings
         public List<BuildingData> placedBuildings = new List<BuildingData>();
+        
+        // Training data - list of all training processes
+        public List<TrainingData> trainingProcesses = new List<TrainingData>();
+        
+        // Unit data - list of all units
+        public List<UnitData> units = new List<UnitData>();
     }
     
     /// <summary>
@@ -128,6 +134,56 @@ namespace KingdomClash
         public Quaternion ToQuaternion()
         {
             return new Quaternion(x, y, z, w);
+        }
+    }
+    
+    /// <summary>
+    /// Stores training process information for saving/loading
+    /// </summary>
+    [System.Serializable]
+    public class TrainingData
+    {
+        public string buildingName;    // Nama bangunan yang melakukan training
+        public string unitType;        // Tipe unit yang dilatih
+        public int count;              // Jumlah unit dalam antrian
+        public float progress;         // Progress training saat ini (0-1)
+        public float trainingTime;     // Total waktu yang dibutuhkan untuk melatih satu unit
+        
+        public TrainingData() { }
+        
+        public TrainingData(string buildingName, string unitType, int count, float progress, float trainingTime)
+        {
+            this.buildingName = buildingName;
+            this.unitType = unitType;
+            this.count = count;
+            this.progress = progress;
+            this.trainingTime = trainingTime;
+        }
+    }
+    
+    /// <summary>
+    /// Stores information about a unit (troop)
+    /// </summary>
+    [System.Serializable]
+    public class UnitData
+    {
+        public string unitType;        // Tipe unit (Infantry, Archer, Cavalry)
+        public int health;             // Health saat ini
+        public int maxHealth;          // Health maksimum
+        public int attack;             // Damage serangan
+        public int defense;            // Pertahanan
+        public Vector3Data position;   // Posisi unit
+        
+        public UnitData() { }
+        
+        public UnitData(string unitType, int health, int maxHealth, int attack, int defense, Vector3 position)
+        {
+            this.unitType = unitType;
+            this.health = health;
+            this.maxHealth = maxHealth;
+            this.attack = attack;
+            this.defense = defense;
+            this.position = new Vector3Data(position);
         }
     }
 }

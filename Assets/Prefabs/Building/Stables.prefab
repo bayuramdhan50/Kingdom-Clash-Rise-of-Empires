@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 707473247619608831}
   - component: {fileID: 4743850462341408424}
   - component: {fileID: 658885391279046550}
+  - component: {fileID: 5768818279432097974}
   m_Layer: 0
   m_Name: Stables
   m_TagString: Building
@@ -129,6 +130,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 6.713956, y: 6.748252, z: 5.374171}
   m_Center: {x: -0.060944915, y: -0.061301485, z: 1.9539552}
+--- !u!114 &5768818279432097974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2652230628877644347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37e0ab2390c87044db38c3f46a70afc0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buildingType: Stable
 --- !u!1001 &6317039945526627496
 PrefabInstance:
   m_ObjectHideFlags: 0

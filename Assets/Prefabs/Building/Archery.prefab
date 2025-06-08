@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7797206654809631780}
   - component: {fileID: 3899554013500403888}
   - component: {fileID: 2927963380183544402}
+  - component: {fileID: -6180636536003953069}
   m_Layer: 0
   m_Name: Archery
   m_TagString: Building
@@ -129,6 +130,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 6.736253, y: 6.657968, z: 4.695601}
   m_Center: {x: 0.072093606, y: -0.03884519, z: 1.6146704}
+--- !u!114 &-6180636536003953069
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4246746735186743848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37e0ab2390c87044db38c3f46a70afc0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buildingType: Archery
 --- !u!1001 &54008028212680789
 PrefabInstance:
   m_ObjectHideFlags: 0

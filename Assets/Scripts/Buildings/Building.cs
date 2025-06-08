@@ -52,8 +52,15 @@ namespace KingdomClash
                 // Jika tidak ada BuildingManager, buat dan register
                 BuildingManager.EnsureInstance().RegisterPlacedBuilding(this);
             }
-        }private void OnMouseDown()
+        } protected virtual void OnMouseDown()
         {
+            // Cek jika bangunan ini memiliki BuildingClickHandler yang menggantikan perilaku klik
+            if (GetComponent<BuildingClickHandler>() != null)
+            {
+                // Biarkan BuildingClickHandler menanganinya
+                return;
+            }
+            
             // Gunakan BuildingPanel singleton instance
             if (BuildingPanel.Instance != null)
             {
@@ -66,6 +73,7 @@ namespace KingdomClash
                 healthBar.ShowTemporary();
             }
         }
+        
         private void Update()
         {
             // Produksi resource jika waktunya
