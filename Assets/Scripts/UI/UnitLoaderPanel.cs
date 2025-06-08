@@ -115,35 +115,31 @@ namespace KingdomClash
                 
                 // Variable to hold the unit game object
                 GameObject unitObj = null;
-                
+
                 // Try to instantiate from prefab
                 if (unitPrefabs.ContainsKey(unitType))
                 {
                     GameObject prefab = unitPrefabs[unitType];
                     if (prefab != null)
-                    {                        unitObj = Instantiate(prefab, spawnPos, Quaternion.identity);
+                    {
+                        unitObj = Instantiate(prefab, spawnPos, Quaternion.identity);
                     }
                 }
-                  // If no prefab was available, create a placeholder                if (unitObj == null)
-                {
-                    unitObj = CreatePlaceholderUnit(unitType, spawnPos);
+
+                if (unitObj != null)
+                {                    // Update unit stats
+                    Characters.Unit unitComponent = unitObj.GetComponent<Characters.Unit>();
+                    if (unitComponent != null)
+                    {
+                        unitComponent.SetHealth(unitData.health);
+                        unitComponent.SetAttack(unitData.attack);
+                        unitComponent.SetDefense(unitData.defense);
+                    }
+                    
+                    return true;
                 }
                 
-                // Set up unit stats with the Unit component
-                Characters.Unit unitComponent = unitObj.GetComponent<Characters.Unit>();
-                if (unitComponent == null)
-                {
-                    // If no Unit component found, add one
-                    unitComponent = unitObj.AddComponent<Characters.Unit>();
-                }
-                
-                // Set all the unit properties
-                unitComponent.SetUnitType(unitType);
-                unitComponent.SetMaxHealth(unitData.maxHealth);
-                unitComponent.SetHealth(unitData.health);
-                unitComponent.SetAttack(unitData.attack);
-                unitComponent.SetDefense(unitData.defense);
-                  return true;
+                return false;
             }
             catch (System.Exception)
             {
@@ -154,20 +150,5 @@ namespace KingdomClash
         /// <summary>
         /// Creates a placeholder unit when prefabs are not available
         /// </summary>
-        private GameObject CreatePlaceholderUnit(string unitType, Vector3 position)
-        {
-            // Create a simple placeholder
-            GameObject unitObj = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            unitObj.name = $"Unit_{unitType}";
-            unitObj.transform.position = position;
-              // Set default color for all units
-            Renderer renderer = unitObj.GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                renderer.material.color = new Color(0.7f, 0.7f, 0.7f); // Neutral gray for all units
-            }
-            
-            return unitObj;
-        }
     }
 }
