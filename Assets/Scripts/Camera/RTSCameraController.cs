@@ -8,7 +8,7 @@ public class RTSCameraController : MonoBehaviour
 {    [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 20f;
     [SerializeField] private float borderThickness = 10f;
-    [SerializeField] private bool useScreenEdge = true;
+    [SerializeField] private bool useScreenEdge = false;
     
     [Header("Zoom Settings")]
     [SerializeField] private float zoomSpeed = 5f;

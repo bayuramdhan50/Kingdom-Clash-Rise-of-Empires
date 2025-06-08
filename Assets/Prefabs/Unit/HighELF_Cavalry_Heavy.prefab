@@ -3911,9 +3911,10 @@ GameObject:
   - component: {fileID: -7858690988961668055}
   - component: {fileID: -4128093176144425490}
   - component: {fileID: -8515984950558878022}
+  - component: {fileID: -4411021196353717254}
   m_Layer: 0
   m_Name: HighELF_Cavalry_Heavy
-  m_TagString: Untagged
+  m_TagString: PlayerUnit
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4050,6 +4051,22 @@ MonoBehaviour:
   attack: 10
   defense: 10
   moveSpeed: 5
+--- !u!114 &-4411021196353717254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5732341051999255319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a61963cb76d906499d52fae208653d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attackRange: 5
+  attackCooldown: 2
+  unitTag: PlayerUnit
+  enemyTag: EnemyUnit
 --- !u!1 &5763459755818032411
 GameObject:
   m_ObjectHideFlags: 0

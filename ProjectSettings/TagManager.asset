@@ -5,6 +5,10 @@ TagManager:
   serializedVersion: 2
   tags:
   - Building
+  - EnemyBuilding
+  - EnemyUnit
+  - PlayerBuilding
+  - PlayerUnit
   layers:
   - Default
   - TransparentFX

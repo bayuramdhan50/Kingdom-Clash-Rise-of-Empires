@@ -86,11 +86,8 @@ namespace KingdomClash.Characters
         public string GetUnitType()
         {
             return unitType;
-        }
-
-        /// <summary>
-        /// Gets the current health
-        /// </summary>
+        }        /// <summary>        /// Gets the current health
+        /// </summary>        
         public int GetHealth()
         {
             return currentHealth;
@@ -153,6 +150,20 @@ namespace KingdomClash.Characters
         public bool IsSelected()
         {
             return isSelected;
+        }
+        
+        /// <summary>
+        /// Takes damage and reduces health
+        /// </summary>
+        /// <param name="damage">Amount of damage to take</param>
+        /// <returns>True if unit dies from this damage</returns>
+        public bool TakeDamage(int damage)
+        {
+            int newHealth = currentHealth - damage;
+            SetHealth(newHealth);
+            
+            // Return true if unit died from the damage
+            return currentHealth <= 0;
         }
     }
 }

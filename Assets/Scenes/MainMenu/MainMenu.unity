@@ -2420,6 +2420,8 @@ GameObject:
   - component: {fileID: 613513606}
   - component: {fileID: 613513605}
   - component: {fileID: 613513604}
+  - component: {fileID: 613513607}
+  - component: {fileID: 613513608}
   m_Layer: 0
   m_Name: GameManagers
   m_TagString: Untagged
@@ -2473,6 +2475,74 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &613513607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 613513602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76d7470313032114ab2bb10bf79801c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  terrainWidth: 1000
+  terrainHeight: 1000
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  castlePrefab: {fileID: 9166992170512628509, guid: bea5f6c86fa1f924fa8767871ec61b28,
+    type: 3}
+  workerPrefab: {fileID: 7020009931698475186, guid: c93d11a4faf4e204db0a5323bbd27109,
+    type: 3}
+  minimumDistanceFromEdge: 100
+  minimumDistanceFromCenter: 200
+  enemyCastlePrefab: {fileID: 9166992170512628509, guid: 44a77d96af6b9f04a9eeaaf94c0b3220,
+    type: 3}
+  enemyWorkerPrefab: {fileID: 6367905653284703951, guid: 8468593b99682be49ba02406ac8f4710,
+    type: 3}
+  enemyMaterial: {fileID: 0}
+  disableAutomaticAIController: 1
+--- !u!114 &613513608
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 613513602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24af23d8cd6d0a34e92d417ae5ecf5a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  decisionInterval: 30
+  patrolRadius: 30
+  minResourceAmount: 200
+  farmPrefab: {fileID: 4738312764675580395, guid: 04bc2ba71556ca9448a60c7da5c4f537,
+    type: 3}
+  lumbermillPrefab: {fileID: 1861303137886635943, guid: c7091d4577e8c114c8c0bdb3fe976ef4,
+    type: 3}
+  barracksPrefab: {fileID: 959719271169595006, guid: 3064077e8be6ca54bb9ca6c0c47f09be,
+    type: 3}
+  stablePrefab: {fileID: 2652230628877644347, guid: 4229337c7dd0752439459d0d9da478ea,
+    type: 3}
+  archeryPrefab: {fileID: 4246746735186743848, guid: c2ec1f1438cfc8e479bc987fc2b9eb6c,
+    type: 3}
+  wallPrefab: {fileID: 5144990034379267429, guid: 7f8c0bfdaa6428547bca4b402b01f94f,
+    type: 3}
+  wallCornerPrefab: {fileID: 3049490919277458588, guid: bfd8536240858d14db93dcaf342b3ec1,
+    type: 3}
+  towerPrefab: {fileID: 2552316880936862189, guid: 9c0cb737fcded6644b8b828db654be27,
+    type: 3}
+  workerPrefab: {fileID: 6367905653284703951, guid: 8468593b99682be49ba02406ac8f4710,
+    type: 3}
+  infantryPrefab: {fileID: 3298767450429801714, guid: ece9a54290572f54cb99675ec296d2cf,
+    type: 3}
+  archerPrefab: {fileID: 1077875782725174656, guid: accdd23a1c56a7240aa3687db7744b2d,
+    type: 3}
+  cavalryPrefab: {fileID: 8307631096497678429, guid: 1d69470e69ef42446a556291aa8ac0f5,
+    type: 3}
 --- !u!1 &619770986
 GameObject:
   m_ObjectHideFlags: 0
