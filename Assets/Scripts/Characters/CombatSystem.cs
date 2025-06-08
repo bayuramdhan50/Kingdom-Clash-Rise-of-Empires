@@ -11,10 +11,13 @@ namespace KingdomClash.Characters
         [Header("Combat Settings")]
         [SerializeField] private float attackRange = 5f; // Range at which units can detect enemies
         [SerializeField] private float attackCooldown = 2f; // Time between attacks
-          [Header("Unit Settings")]
+        
+        [Header("Unit Settings")]
         [SerializeField] private string unitTag = "PlayerUnit"; // Tag for this unit (PlayerUnit or EnemyUnit)
         [SerializeField] private string enemyTag = "EnemyUnit"; // Tag for enemy units
         [SerializeField] private string enemyBuildingTag = "EnemyBuilding"; // Tag for enemy buildings
+        [SerializeField] private string enemyCastleTag = "EnemyCastle"; // Tag for enemy castle
+        [SerializeField] private string playerCastleTag = "PlayerCastle"; // Tag for player castle
         
         private Unit unitComponent;
         private bool canAttack = true;
@@ -22,19 +25,21 @@ namespace KingdomClash.Characters
         private bool isTargetBuilding = false; // Whether current target is a building
           private void Start()
         {
-            unitComponent = GetComponent<Unit>();
-            
-            // If this is attached to a player unit, enemy tag should be "EnemyUnit", and vice versa
+            unitComponent = GetComponent<Unit>();            // If this is attached to a player unit, enemy tag should be "EnemyUnit", and vice versa
             if (gameObject.CompareTag("PlayerUnit"))
             {
                 enemyTag = "EnemyUnit";
                 enemyBuildingTag = "EnemyBuilding";
+                enemyCastleTag = "EnemyCastle";
+                playerCastleTag = "PlayerCastle";
                 unitTag = "PlayerUnit";
             }
             else if (gameObject.CompareTag("EnemyUnit"))
             {
                 enemyTag = "PlayerUnit";
                 enemyBuildingTag = "Building";
+                enemyCastleTag = "PlayerCastle";
+                playerCastleTag = "EnemyCastle"; // Untuk unit musuh, kastil mereka adalah "EnemyCastle"
                 unitTag = "EnemyUnit";
             }
             
@@ -47,12 +52,14 @@ namespace KingdomClash.Characters
         private IEnumerator ScanForEnemies()
         {
             while (true)
-            {
-                // Find all enemy units
+            {                // Find all enemy units
                 GameObject[] enemyUnits = GameObject.FindGameObjectsWithTag(enemyTag);
                 
                 // Find all enemy buildings
                 GameObject[] enemyBuildings = GameObject.FindGameObjectsWithTag(enemyBuildingTag);
+                
+                // Find enemy castles
+                GameObject[] enemyCastles = GameObject.FindGameObjectsWithTag(enemyCastleTag);
                 
                 // Find the closest target within attack range
                 float closestDistance = attackRange;
@@ -70,8 +77,7 @@ namespace KingdomClash.Characters
                         isBuilding = false;
                     }
                 }
-                
-                // Check enemy buildings
+                  // Check enemy buildings
                 foreach (GameObject building in enemyBuildings)
                 {
                     float distance = Vector3.Distance(transform.position, building.transform.position);
@@ -79,6 +85,19 @@ namespace KingdomClash.Characters
                     {
                         closestDistance = distance;
                         closestTarget = building.transform;
+                        isBuilding = true;
+                    }
+                }
+                
+                // Check enemy castles (prioritize castles over regular buildings)
+                foreach (GameObject castle in enemyCastles)
+                {
+                    float distance = Vector3.Distance(transform.position, castle.transform.position);
+                    if (distance < closestDistance)
+                    {
+                        // Prioritize castles by giving them a slight distance advantage
+                        closestDistance = distance;
+                        closestTarget = castle.transform;
                         isBuilding = true;
                     }
                 }
@@ -98,6 +117,23 @@ namespace KingdomClash.Characters
                 else
                 {
                     currentTarget = null;
+                    
+                    // Jika tidak ada target dalam jangkauan, periksa apakah kastil sendiri diserang
+                    // (hanya untuk unit AI, agar pemain tidak kehilangan kendali atas unit mereka)
+                    if (gameObject.CompareTag("EnemyUnit") && IsOwnCastleUnderAttack())
+                    {
+                        // Kastil sendiri diserang, cari kastil kita
+                        GameObject[] friendlyCastles = GameObject.FindGameObjectsWithTag(playerCastleTag);
+                        if (friendlyCastles.Length > 0)
+                        {
+                            // Kembali ke kastil untuk mempertahankannya
+                            if (GetComponent<Unit>() != null)
+                            {
+                                GetComponent<Unit>().MoveTo(friendlyCastles[0].transform.position);
+                                Debug.Log("Unit kembali untuk mempertahankan kastil!");
+                            }
+                        }
+                    }
                 }
                 
                 // Scan every 0.5 seconds
@@ -171,8 +207,7 @@ namespace KingdomClash.Characters
             // Ready to attack again
             canAttack = true;
         }
-        
-        /// <summary>
+          /// <summary>
         /// Set a specific target for this unit to attack
         /// </summary>
         /// <param name="targetTransform">The transform of the target to attack</param>
@@ -181,7 +216,8 @@ namespace KingdomClash.Characters
             if (targetTransform == null) return;
             
             // Determine if it's a building or unit
-            bool targetIsBuilding = targetTransform.CompareTag(enemyBuildingTag);
+            bool targetIsBuilding = targetTransform.CompareTag(enemyBuildingTag) || 
+                                   targetTransform.CompareTag(enemyCastleTag);
             
             // Set as current target
             currentTarget = targetTransform;
@@ -203,6 +239,39 @@ namespace KingdomClash.Characters
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, attackRange);
+        }
+        
+        /// <summary>
+        /// Cek apakah kastil sendiri diserang dan memanggil bantuan jika perlu
+        /// </summary>
+        public bool IsOwnCastleUnderAttack()
+        {
+            // Cari kastil sendiri berdasarkan tag
+            GameObject[] friendlyCastles = GameObject.FindGameObjectsWithTag(playerCastleTag);
+            if (friendlyCastles.Length == 0)
+                return false;
+                
+            // Periksa apakah ada unit musuh dalam jarak serangan dari kastil
+            foreach (GameObject castle in friendlyCastles)
+            {
+                // Temukan semua unit musuh dalam radius serangan
+                Collider[] nearbyEnemies = Physics.OverlapSphere(
+                    castle.transform.position, 
+                    15f, // Radius pencarian, sedikit lebih besar dari range serangan normal
+                    LayerMask.GetMask("Default"));
+                
+                foreach (Collider col in nearbyEnemies)
+                {
+                    if (col.CompareTag(enemyTag))
+                    {
+                        // Ada unit musuh dekat kastil!
+                        Debug.Log($"Kastil {playerCastleTag} diserang! Memanggil bantuan.");
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
         }
     }
 }

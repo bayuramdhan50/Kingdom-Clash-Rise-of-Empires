@@ -14,7 +14,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: 637b3bb1a53fd584b8b2f29eddb05290, type: 3}
       propertyPath: m_TagString
-      value: EnemyBuilding
+      value: EnemyCastle
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 637b3bb1a53fd584b8b2f29eddb05290, type: 3}
       propertyPath: m_LocalPosition.x
@@ -63,7 +63,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 637b3bb1a53fd584b8b2f29eddb05290,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 7352644314423730999}
+      addedObject: {fileID: 3912099483507563787}
   m_SourcePrefab: {fileID: 100100000, guid: 637b3bb1a53fd584b8b2f29eddb05290, type: 3}
 --- !u!1 &9166992170512628509 stripped
 GameObject:
@@ -71,7 +71,7 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 9166992170512596413}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &7352644314423730999
+--- !u!114 &3912099483507563787
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -80,16 +80,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 9166992170512628509}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 11528332deaa9ba49ac1d95821c86c87, type: 3}
+  m_Script: {fileID: 11500000, guid: c377a2c362491e140831a019efe14ad5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   buildingName: Castle
   buildingDescription: 
-  health: 500
-  maxHealth: 500
+  health: 10
+  maxHealth: 10
   producesResources: 0
   resourceType: 
   productionAmount: 0
   productionInterval: 60
-  healthBar: {fileID: 7643512275771006181, guid: c6ca9f59245da8145b4cb0a74a5074fc,
+  healthBar: {fileID: 7643512275771006181, guid: b9714a97696688e42992c6f1131586db,
     type: 3}
+  isPlayerCastle: 0
