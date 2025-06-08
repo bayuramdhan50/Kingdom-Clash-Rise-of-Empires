@@ -1048,7 +1048,7 @@ AudioSource:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 1437c50f4d67bfb4eacaa6014fc72c54, type: 3}
@@ -6279,10 +6279,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96578d8d91d995943b17d6216f72de76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  infantryPrefab: {fileID: 0}
-  archerPrefab: {fileID: 6171338673617672620, guid: 64475ffe6f385a94eacc6c24d7bb17d1,
+  infantryPrefab: {fileID: 2718811157632450833, guid: fd6f6e5fcec4b024eb54250a00d86da2,
     type: 3}
-  cavalryPrefab: {fileID: 0}
+  archerPrefab: {fileID: 4883327788788358475, guid: bc59c5bb6c7ff384d9ed7a896d0139df,
+    type: 3}
+  cavalryPrefab: {fileID: 5732341051999255319, guid: 2d58c8633ca6707409869db0f11a7521,
+    type: 3}
 --- !u!4 &1968559320
 Transform:
   m_ObjectHideFlags: 0
