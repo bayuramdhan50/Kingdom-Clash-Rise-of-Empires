@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using KingdomClash.UI; // Tambahkan namespace untuk ResourcePanel
 
 namespace KingdomClash
 {
@@ -323,16 +324,24 @@ namespace KingdomClash
             switch (resourceType.ToLower())
             {
                 case "wood":
+                    int oldWood = currentGameData.resources.wood;
                     currentGameData.resources.wood += amount;
+                    Debug.Log($"Wood updated: {oldWood} -> {currentGameData.resources.wood} (change: {amount})");
                     break;
                 case "stone":
+                    int oldStone = currentGameData.resources.stone;
                     currentGameData.resources.stone += amount;
+                    Debug.Log($"Stone updated: {oldStone} -> {currentGameData.resources.stone} (change: {amount})");
                     break;
                 case "iron":
+                    int oldIron = currentGameData.resources.iron;
                     currentGameData.resources.iron += amount;
+                    Debug.Log($"Iron updated: {oldIron} -> {currentGameData.resources.iron} (change: {amount})");
                     break;
                 case "food":
+                    int oldFood = currentGameData.resources.food;
                     currentGameData.resources.food += amount;
+                    Debug.Log($"Food updated: {oldFood} -> {currentGameData.resources.food} (change: {amount})");
                     break;
             }
             
@@ -341,6 +350,9 @@ namespace KingdomClash
             {
                 CheckResourceChangeForAutoSave();
             }
+            
+            // Update UI whenever resources change
+            UpdateResourceUI();
         }
         
         /// <summary>
@@ -637,6 +649,24 @@ namespace KingdomClash
         public GameData GetPreCapturedGameData()
         {
             return preCapturedData;
+        }
+
+        /// <summary>
+        /// Updates the UI to show the current resources
+        /// </summary>
+        private void UpdateResourceUI()
+        {
+            // Find ResourcePanel in scene with full namespace
+            KingdomClash.UI.ResourcePanel resourcePanel = FindObjectOfType<KingdomClash.UI.ResourcePanel>();
+            if (resourcePanel != null)
+            {
+                resourcePanel.UpdateResourceDisplay();
+                Debug.Log("Resource UI updated via FindObjectOfType");
+            }
+            else
+            {
+                Debug.LogWarning("ResourcePanel not found in scene. Resources updated but UI won't reflect changes.");
+            }
         }
     }
 }

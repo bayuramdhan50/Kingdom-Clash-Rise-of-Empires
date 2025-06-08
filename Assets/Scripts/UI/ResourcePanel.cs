@@ -93,9 +93,46 @@ namespace KingdomClash.UI
         public void UpdateResourceDisplay()
         {
             if (GameManager.Instance == null || GameManager.Instance.GetCurrentGameData() == null)
+            {
+                Debug.LogWarning("Cannot update resource display: GameManager or GameData is null");
                 return;
-                
-            UpdateResourceDisplay(GameManager.Instance.GetCurrentGameData().resources);
+            }
+            
+            Resources resources = GameManager.Instance.GetCurrentGameData().resources;
+            
+            UpdateResourceDisplay(resources);
+        }
+        
+        // Singleton instance untuk memudahkan akses
+        public static ResourcePanel Instance { get; private set; }
+        
+        private void Awake()
+        {
+            // Setup Singleton pattern
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            
+            Instance = this;
+        }
+
+        private void Start()
+        {
+            // Update resource display at start
+            UpdateResourceDisplay();
+            
+            // Subscribe to the resource update event - ini akan diimplementasikan nanti jika diperlukan
+        }
+        
+        private void Update()
+        {
+            // Auto-update setiap beberapa detik
+            if (Time.frameCount % 60 == 0) // Update setiap ~1 detik pada 60 FPS
+            {
+                UpdateResourceDisplay();
+            }
         }
     }
 }
