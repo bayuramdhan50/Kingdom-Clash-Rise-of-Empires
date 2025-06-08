@@ -2519,9 +2519,9 @@ MonoBehaviour:
   decisionInterval: 30
   patrolRadius: 30
   minResourceAmount: 200
-  farmPrefab: {fileID: 4738312764675580395, guid: 27316ed5add035c48b29a52ab6081a54,
+  farmPrefab: {fileID: 4738312764675580395, guid: 04bc2ba71556ca9448a60c7da5c4f537,
     type: 3}
-  lumbermillPrefab: {fileID: 1861303137886635943, guid: 2f1a1c4b27cfe7b47b8df84b702863dd,
+  lumbermillPrefab: {fileID: 1861303137886635943, guid: c7091d4577e8c114c8c0bdb3fe976ef4,
     type: 3}
   barracksPrefab: {fileID: 959719271169595006, guid: 3064077e8be6ca54bb9ca6c0c47f09be,
     type: 3}
