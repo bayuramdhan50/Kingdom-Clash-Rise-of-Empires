@@ -119,6 +119,13 @@ namespace KingdomClash.UI
             
             if (building == null) return;
             
+            // Periksa apakah ini bangunan pemain atau musuh
+            if (building.CompareTag("EnemyBuilding"))
+            {
+                Debug.LogWarning("Mencoba membuka TrainingPanel untuk bangunan musuh. Operasi dibatalkan.");
+                return;
+            }
+            
             // Set nilai-nilai berdasarkan tipe bangunan
             currentUnitType = "Infantry";
             foodCost = 50;

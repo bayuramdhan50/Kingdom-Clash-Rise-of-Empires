@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Reflection; // Untuk FieldInfo
 
 namespace KingdomClash.UI
 {
@@ -32,13 +33,21 @@ namespace KingdomClash.UI
         }
         
         // Dictionary untuk menyimpan antrian training berdasarkan nama bangunan
-        private Dictionary<string, TrainingInfo> trainingQueues = new Dictionary<string, TrainingInfo>();
-        
-        // Unit prefabs (untuk instansiasi unit setelah training selesai)
-        [Header("Unit Prefabs")]
+        private Dictionary<string, TrainingInfo> trainingQueues = new Dictionary<string, TrainingInfo>();        // Unit prefabs (untuk instansiasi unit setelah training selesai)
+        [Header("Player Unit Prefabs")]
+        [Tooltip("Should be HighELF_Heavy_Infantry")]
         [SerializeField] private GameObject infantryPrefab;
+        [Tooltip("Should be DarkELF_Archer")]
         [SerializeField] private GameObject archerPrefab;
+        [Tooltip("Should be HighELF_Cavalry_Heavy")]
         [SerializeField] private GameObject cavalryPrefab;
+        [Header("Enemy Unit Prefabs")]
+        [Tooltip("Should be WoodELF_Infantry")]
+        [SerializeField] private GameObject enemyInfantryPrefab;
+        [Tooltip("Should be WoodELF_Archer")]
+        [SerializeField] private GameObject enemyArcherPrefab;
+        [Tooltip("Should be WoodELF_Cavalry")]
+        [SerializeField] private GameObject enemyCavalryPrefab;
         
         // Delegate untuk event training
         public delegate void TrainingProgressHandler(string buildingName, float progress);
@@ -169,10 +178,13 @@ namespace KingdomClash.UI
                 return; // Akan coba lagi pada update berikutnya
             }
             
+            // Periksa apakah ini bangunan pemain atau musuh
+            bool isEnemyBuilding = building.CompareTag("EnemyBuilding");
+            
             // Tentukan spawn position (di depan bangunan)
             // Menggunakan right vector karena bangunan dirotasi -90 derajat pada sumbu X
             // Ini berarti 'forward' bangunan sebenarnya mengarah ke right dalam world space
-            Vector3 spawnPos = building.transform.position + building.transform.right * 3f;
+            Vector3 spawnPos = building.transform.position + building.transform.right * 5f;
               // Set nilai default untuk unit stats
             GameObject prefabToSpawn = null;
             int health = 100;
@@ -180,10 +192,11 @@ namespace KingdomClash.UI
             int attack = 10;
             int defense = 10;
             
-            // Pilih prefab dan stats berdasarkan tipe unit
+            // Pilih prefab dan stats berdasarkan tipe unit dan pemilik bangunan
             switch (unitType.ToLower())
-            {                case "infantry":
-                    prefabToSpawn = infantryPrefab;
+            {
+                case "infantry":
+                    prefabToSpawn = isEnemyBuilding ? enemyInfantryPrefab : infantryPrefab;
                     health = 120;
                     maxHealth = 120;
                     attack = 15;
@@ -191,7 +204,7 @@ namespace KingdomClash.UI
                     break;
                     
                 case "archer":
-                    prefabToSpawn = archerPrefab;
+                    prefabToSpawn = isEnemyBuilding ? enemyArcherPrefab : archerPrefab;
                     health = 80;
                     maxHealth = 80;
                     attack = 20;
@@ -199,7 +212,7 @@ namespace KingdomClash.UI
                     break;
                     
                 case "cavalry":
-                    prefabToSpawn = cavalryPrefab;
+                    prefabToSpawn = isEnemyBuilding ? enemyCavalryPrefab : cavalryPrefab;
                     health = 150;
                     maxHealth = 150;
                     attack = 25;
@@ -207,7 +220,7 @@ namespace KingdomClash.UI
                     break;
                     
                 default:
-                    prefabToSpawn = infantryPrefab;
+                    prefabToSpawn = isEnemyBuilding ? enemyInfantryPrefab : infantryPrefab;
                     Debug.LogWarning($"Unknown unit type: {unitType}, using infantry as default");
                     break;
             }
@@ -218,6 +231,18 @@ namespace KingdomClash.UI
             if (prefabToSpawn != null)
             {
                 GameObject unitObj = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+                
+                // Tetapkan tag berdasarkan pemilik bangunan
+                if (isEnemyBuilding)
+                {
+                    unitObj.tag = "EnemyUnit";
+                    Debug.Log($"Enemy {unitType} unit spawned from {buildingName}");
+                }
+                else
+                {
+                    unitObj.tag = "PlayerUnit";
+                    Debug.Log($"Player {unitType} unit spawned from {buildingName}");
+                }
                 
                 // Set up unit stats if there's a Unit component
                 Characters.Unit unitComponent = unitObj.GetComponent<Characters.Unit>();
@@ -498,6 +523,93 @@ namespace KingdomClash.UI
                 prefabs.Add("cavalry", cavalryPrefab);
                 
             return prefabs;
+        }
+        
+        /// <summary>
+        /// Method khusus untuk AI untuk membuat unit tanpa harus melalui antrian pelatihan
+        /// </summary>
+        public GameObject SpawnEnemyUnitDirectly(Vector3 position, string unitType)
+        {
+            GameObject prefabToSpawn = null;
+            int health = 100;
+            int maxHealth = 100;
+            int attack = 10;
+            int defense = 10;
+            
+            // Pilih prefab dan stats berdasarkan tipe unit
+            switch (unitType.ToLower())
+            {
+                case "infantry":
+                    prefabToSpawn = enemyInfantryPrefab;
+                    health = 120;
+                    maxHealth = 120;
+                    attack = 15;
+                    defense = 10;
+                    break;
+                    
+                case "archer":
+                    prefabToSpawn = enemyArcherPrefab;
+                    health = 80;
+                    maxHealth = 80;
+                    attack = 20;
+                    defense = 5;
+                    break;
+                    
+                case "cavalry":
+                    prefabToSpawn = enemyCavalryPrefab;
+                    health = 150;
+                    maxHealth = 150;
+                    attack = 25;
+                    defense = 15;
+                    break;
+                    
+                case "worker":
+                    // Gunakan worker prefab dari SimpleAI jika tersedia
+                    GameObject simpleAIObject = GameObject.FindObjectOfType<SimpleAI>()?.gameObject;
+                    if (simpleAIObject != null)
+                    {
+                        SimpleAI simpleAI = simpleAIObject.GetComponent<SimpleAI>();
+                        FieldInfo workerField = typeof(SimpleAI).GetField("workerPrefab", 
+                            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                        if (workerField != null)
+                        {
+                            prefabToSpawn = workerField.GetValue(simpleAI) as GameObject;
+                        }
+                    }
+                    
+                    if (prefabToSpawn == null)
+                    {
+                        Debug.LogWarning("Worker prefab tidak ditemukan di SimpleAI. Menggunakan infantry sebagai fallback.");
+                        prefabToSpawn = enemyInfantryPrefab;
+                    }
+                    break;
+                    
+                default:
+                    prefabToSpawn = enemyInfantryPrefab;
+                    Debug.LogWarning($"Unknown unit type: {unitType}, using infantry as default");
+                    break;
+            }
+            
+            if (prefabToSpawn != null)
+            {
+                GameObject unitObj = Instantiate(prefabToSpawn, position, Quaternion.identity);
+                unitObj.tag = "EnemyUnit";
+                
+                // Set up unit stats
+                Characters.Unit unitComponent = unitObj.GetComponent<Characters.Unit>();
+                if (unitComponent != null)
+                {
+                    unitComponent.SetHealth(health);
+                    unitComponent.SetMaxHealth(maxHealth);
+                    unitComponent.SetAttack(attack);
+                    unitComponent.SetDefense(defense);
+                }
+                
+                Debug.Log($"Enemy {unitType} unit spawned directly at {position}");
+                return unitObj;
+            }
+            
+            return null;
         }
     }
 }

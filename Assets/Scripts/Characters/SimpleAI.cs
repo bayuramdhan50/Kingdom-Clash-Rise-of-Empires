@@ -37,12 +37,11 @@ namespace KingdomClash
         [SerializeField] private GameObject wallPrefab;
         [SerializeField] private GameObject wallCornerPrefab;
         [SerializeField] private GameObject towerPrefab;
-        
-        [Header("Unit Prefabs")]
-        [SerializeField] private GameObject workerPrefab;
-        [SerializeField] private GameObject infantryPrefab;
-        [SerializeField] private GameObject archerPrefab;
-        [SerializeField] private GameObject cavalryPrefab;
+          [Header("Unit Prefabs")]
+        [SerializeField] private GameObject workerPrefab; // Seharusnya DarkELF_Worker
+        [SerializeField] private GameObject infantryPrefab; // Seharusnya WoodELF_Infantry
+        [SerializeField] private GameObject archerPrefab; // Seharusnya WoodELF_Archer
+        [SerializeField] private GameObject cavalryPrefab; // Seharusnya WoodELF_Cavalry
 
         // Internal tracking
         private GameObject enemyCastle;
@@ -68,7 +67,16 @@ namespace KingdomClash
                 iron = 200,
                 food = 600
             };
-            
+              // Debug prefab names to check if they're correct
+            if (workerPrefab != null)
+                Debug.Log($"Worker prefab name: {workerPrefab.name}"); // Should be DarkELF_Worker
+            if (infantryPrefab != null)
+                Debug.Log($"Infantry prefab name: {infantryPrefab.name}"); // Should be WoodELF_Infantry
+            if (archerPrefab != null)
+                Debug.Log($"Archer prefab name: {archerPrefab.name}"); // Should be WoodELF_Archer
+            if (cavalryPrefab != null)
+                Debug.Log($"Cavalry prefab name: {cavalryPrefab.name}"); // Should be WoodELF_Cavalry
+                
             // Find enemy buildings and units
             FindEnemyEntities();
             
@@ -518,17 +526,17 @@ namespace KingdomClash
             else if (hasBarracks && infantryCount < 4 && infantryPrefab != null)
             {
                 unitToTrain = infantryPrefab;
-                unitTypeName = "infantry";
+                unitTypeName = "enemyinfantry";
             }
             else if (hasArchery && archerCount < 3 && archerPrefab != null)
             {
                 unitToTrain = archerPrefab;
-                unitTypeName = "archer";
+                unitTypeName = "enemyarcher";
             }
             else if (hasStable && cavalryCount < 3 && cavalryPrefab != null)
             {
                 unitToTrain = cavalryPrefab;
-                unitTypeName = "cavalry";
+                unitTypeName = "enemycavalry";
             }
             
             // Train the unit
@@ -547,6 +555,16 @@ namespace KingdomClash
                 }
                   // Create the unit
                 GameObject newUnit = Instantiate(unitToTrain, unitPos, Quaternion.identity);
+                  // Check if this is the correct unit type
+                if (unitTypeName.Contains("worker") && !newUnit.name.Contains("DarkELF"))
+                {
+                    Debug.LogWarning($"WARNING: Worker should be DarkELF but found {newUnit.name}! Check worker prefab reference in SimpleAI component.");
+                }
+                else if (!unitTypeName.Contains("worker") && !newUnit.name.Contains("WoodELF"))
+                {
+                    Debug.LogWarning($"WARNING: Combat units should be WoodELF but found {newUnit.name}! Check prefab references in SimpleAI component.");
+                }
+                
                 newUnit.tag = "EnemyUnit";
                 
                 // Set proper unit name
