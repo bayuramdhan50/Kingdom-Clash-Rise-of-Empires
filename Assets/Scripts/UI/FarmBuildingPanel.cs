@@ -34,6 +34,10 @@ namespace KingdomClash.UI
         [SerializeField] private Button closeButton;
         [SerializeField] private Button destroyButton;
         
+        [Header("Upgrade Progress")]
+        [SerializeField] private Slider upgradeProgressBar;
+        [SerializeField] private GameObject upgradeProgressPanel;
+        
         // Reference to the current farm building
         private FarmBuilding currentFarm;
         
@@ -130,8 +134,7 @@ namespace KingdomClash.UI
                         upgradeButton.interactable = currentFarm.CanUpgrade();
                 }
             }
-        }
-          /// <summary>
+        }        /// <summary>
         /// Membuka panel untuk bangunan farm tertentu
         /// </summary>
         /// <param name="farm">Farm building untuk ditampilkan</param>
@@ -145,8 +148,17 @@ namespace KingdomClash.UI
                 
             currentFarm = farm;
             
+            // Setup event listener untuk progress upgrade
+            farm.OnUpgradeProgressChanged += UpdateUpgradeProgress;
+            
             // Update semua UI elements
             UpdateUIElements();
+            
+            // Inisialisasi panel upgrade progress jika ada
+            if (upgradeProgressPanel != null)
+            {
+                upgradeProgressPanel.SetActive(false); // Akan diaktifkan saat upgrade dimulai
+            }
             
             // Show panel and ensure parent canvas is active
             gameObject.SetActive(true);
@@ -157,7 +169,7 @@ namespace KingdomClash.UI
         
         /// <summary>
         /// Memperbarui semua elemen UI dengan data dari farm saat ini
-        /// </summary>
+        /// </summary>        
         private void UpdateUIElements()
         {
             if (currentFarm == null)
@@ -174,7 +186,7 @@ namespace KingdomClash.UI
                 storageText.text = $"Storage: {currentFarm.GetStoredResources()}/{currentFarm.GetMaxStoredResources()}";
                 
             if (productionRateText != null)
-                productionRateText.text = $"Production: {currentFarm.GetProductionAmount()} wood every {currentFarm.GetProductionInterval().ToString("F1")}s";
+                productionRateText.text = $"Production: {currentFarm.GetProductionAmount()} food every {currentFarm.GetProductionInterval().ToString("F1")}s";
                 
             if (healthText != null)
                 healthText.text = $"Health: {currentFarm.GetHealth()}/{currentFarm.GetMaxHealth()}";
@@ -204,12 +216,23 @@ namespace KingdomClash.UI
                 // Show upgrade panel
                 if (upgradePanel != null)
                     upgradePanel.SetActive(true);
+                    
+                // Hide or show progress panel based on upgrade state
+                bool isUpgrading = upgradeProgressPanel != null && upgradeProgressBar != null && upgradeProgressBar.value > 0 && upgradeProgressBar.value < 1;
+                if (upgradeProgressPanel != null)
+                {
+                    upgradeProgressPanel.SetActive(isUpgrading);
+                }
             }
             else
             {
                 // Hide upgrade panel if max level
                 if (upgradePanel != null)
                     upgradePanel.SetActive(false);
+                    
+                // Hide upgrade progress panel if max level
+                if (upgradeProgressPanel != null)
+                    upgradeProgressPanel.SetActive(false);
             }
             
             // Progress bars initial update
@@ -219,8 +242,7 @@ namespace KingdomClash.UI
             if (harvestButton != null)
                 harvestButton.interactable = currentFarm.GetStoredResources() > 0;
         }
-        
-        /// <summary>
+          /// <summary>
         /// Update progress bars untuk produksi dan storage
         /// </summary>
         private void UpdateProgressBars()
@@ -243,21 +265,89 @@ namespace KingdomClash.UI
             // Update harvest button interactability
             if (harvestButton != null)
                 harvestButton.interactable = currentFarm.GetStoredResources() > 0;
-        }
-        
-        /// <summary>
-        /// Upgrade farm yang sedang dipilih
+            
+            // Update upgrade progress jika metode tersedia
+            if (upgradeProgressBar != null && currentFarm != null)
+            {
+                // Cek apakah metode IsUpgrading() tersedia
+                bool isUpgrading = false;
+                try
+                {
+                    isUpgrading = currentFarm.IsUpgrading();
+                }
+                catch (System.Exception)
+                {
+                    // Metode tidak tersedia, gunakan nilai default
+                    isUpgrading = false;
+                }
+                
+                if (isUpgrading)
+                {
+                    try
+                    {
+                        upgradeProgressBar.value = currentFarm.GetUpgradeProgress();
+                        if (upgradeProgressPanel != null)
+                        {
+                            upgradeProgressPanel.SetActive(true);
+                        }
+                    }
+                    catch (System.Exception)
+                    {
+                        // Metode tidak tersedia, gunakan nilai default
+                        upgradeProgressBar.value = 0f;
+                    }
+                }
+                else if (upgradeProgressPanel != null)
+                {
+                    upgradeProgressPanel.SetActive(false);
+                }
+            }
+        }/// <summary>
+        /// Mulai proses upgrade farm yang sedang dipilih
         /// </summary>
         private void UpgradeCurrentFarm()
         {
             if (currentFarm == null)
                 return;
                 
-            // Attempt to upgrade
-            currentFarm.Upgrade();
+            // Mulai proses upgrade
+            currentFarm.StartUpgrade();
             
-            // Update UI after upgrade
+            // Update UI after starting upgrade
             UpdateUIElements();
+            
+            // Disable tombol upgrade selama proses berlangsung
+            if (upgradeButton != null)
+            {
+                upgradeButton.interactable = false;
+            }
+            
+            // Log status upgrade
+            Debug.Log($"Starting farm upgrade to level {currentFarm.GetCurrentLevel() + 1}...");
+        }
+          /// <summary>
+        /// Update progress bar upgrade
+        /// </summary>
+        private void UpdateUpgradeProgress(float progress)
+        {
+            if (upgradeProgressBar != null)
+            {
+                upgradeProgressBar.value = progress;
+            }
+            
+            // Tampilkan atau sembunyikan panel progress
+            if (upgradeProgressPanel != null)
+            {
+                // Tampilkan jika proses sedang berlangsung (progress > 0 dan < 1)
+                upgradeProgressPanel.SetActive(progress > 0 && progress < 1);
+                
+                // Jika upgrade sudah selesai, update UI
+                if (progress >= 1f)
+                {
+                    // Upgrade selesai, update UI
+                    UpdateUIElements();
+                }
+            }
         }
         
         /// <summary>
@@ -273,14 +363,19 @@ namespace KingdomClash.UI
             
             // Update UI after harvesting
             UpdateUIElements();
-        }
-          /// <summary>
+        }        /// <summary>
         /// Tutup panel
         /// </summary>
         private void ClosePanel()
         {
             // Log untuk debugging
             Debug.Log("Closing FarmBuildingPanel");
+            
+            // Unsubscribe dari event
+            if (currentFarm != null)
+            {
+                currentFarm.OnUpgradeProgressChanged -= UpdateUpgradeProgress;
+            }
             
             // Reset state
             gameObject.SetActive(false);
@@ -294,6 +389,8 @@ namespace KingdomClash.UI
         {
             ClosePanel();
         }
+          // Metode UpdateUpgradeProgress sudah ada di bagian lain kode
+        // Menghapus metode duplikat ini untuk mengatasi error CS0111
           [Header("Confirmation Dialog")]
         [SerializeField] private GameObject confirmationDialog;
         [SerializeField] private Button confirmDestroyButton;
