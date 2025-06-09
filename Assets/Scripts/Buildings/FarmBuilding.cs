@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 namespace KingdomClash
 {
@@ -22,6 +23,15 @@ namespace KingdomClash
         [SerializeField] private float[] levelProductionSpeed; // Seconds per production cycle
         [SerializeField] private int[] levelStorageCapacity; // Maksimum resource yang dapat disimpan
         
+        [Header("Upgrade Progress")]
+        [SerializeField] private bool isUpgrading = false;
+        [SerializeField] private float upgradeProgress = 0f;
+        [SerializeField] private float[] upgradeTime; // Waktu yang diperlukan untuk meng-upgrade (dalam detik) per level
+        
+        [Header("Upgrade Effects")]
+        [SerializeField] private GameObject upgradeInProgressEffect;
+        [SerializeField] private GameObject upgradeCompletedEffect;
+        
         // Resource storage untuk farm
         private int storedResources = 0;
         private int maxStoredResources = 100; // Default, akan diupdate berdasarkan level
@@ -30,6 +40,9 @@ namespace KingdomClash
         [SerializeField] private GameObject upgradeButtonPrefab;
         [SerializeField] private GameObject resourceIndicator;
         
+        // Event untuk UI
+        public System.Action<float> OnUpgradeProgressChanged;
+
         private void Awake()
         {
             // Pastikan array memiliki panjang yang sesuai dengan maxLevel
@@ -92,6 +105,14 @@ namespace KingdomClash
                 levelStorageCapacity = new int[maxLevel];
                 for (int i = 0; i < maxLevel; i++)
                     levelStorageCapacity[i] = 100 * (i + 1);
+            }
+            
+            // Setup waktu upgrade jika belum diinisialisasi
+            if (upgradeTime == null || upgradeTime.Length < maxLevel - 1)
+            {
+                upgradeTime = new float[maxLevel - 1];
+                for (int i = 0; i < maxLevel - 1; i++)
+                    upgradeTime[i] = 30f + (30f * i); // Level 1->2: 30 detik, Level 2->3: 60 detik, dst.
             }
         }
         
@@ -156,13 +177,12 @@ namespace KingdomClash
                    playerResources.stone >= upgradeCostStone[levelIndex] &&
                    playerResources.iron >= upgradeCostIron[levelIndex];
         }
-        
-        /// <summary>
-        /// Upgrade farm ke level berikutnya
+          /// <summary>
+        /// Memulai proses upgrade farm ke level berikutnya
         /// </summary>
-        public void Upgrade()
+        public void StartUpgrade()
         {
-            if (!CanUpgrade())
+            if (!CanUpgrade() || isUpgrading)
                 return;
                 
             // Ambil biaya upgrade
@@ -173,24 +193,155 @@ namespace KingdomClash
             GameManager.Instance.UpdateResource("stone", -upgradeCostStone[levelIndex]);
             GameManager.Instance.UpdateResource("iron", -upgradeCostIron[levelIndex]);
             
+            // Set flag upgrade dan reset progress
+            isUpgrading = true;
+            upgradeProgress = 0f;
+            
+            // Tampilkan efek upgrade in-progress
+            PlayUpgradeInProgressEffect();
+            
+            Debug.Log($"Farm upgrade started to level {currentLevel + 1}. ETA: {GetUpgradeTimeForCurrentLevel()} seconds");
+        }
+        
+        /// <summary>
+        /// Mendapatkan waktu upgrade untuk level saat ini
+        /// </summary>
+        public float GetUpgradeTimeForCurrentLevel()
+        {
+            // Pastikan array telah diinisialisasi
+            EnsureArrayLengths();
+            
+            // Ambil waktu upgrade untuk level saat ini
+            if (currentLevel <= 0 || currentLevel > maxLevel || currentLevel > upgradeTime.Length)
+                return 60f; // Default 60 detik
+                
+            return upgradeTime[currentLevel - 1];
+        }
+        
+        /// <summary>
+        /// Menghentikan proses upgrade (misalnya jika dibatalkan)
+        /// </summary>
+        public void CancelUpgrade()
+        {
+            if (!isUpgrading)
+                return;
+                
+            // Hentikan upgrade
+            isUpgrading = false;
+            upgradeProgress = 0f;
+            
+            // Kembalikan resource (opsional)
+            int levelIndex = currentLevel - 1;
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.UpdateResource("wood", upgradeCostWood[levelIndex]);
+                GameManager.Instance.UpdateResource("stone", upgradeCostStone[levelIndex]);
+                GameManager.Instance.UpdateResource("iron", upgradeCostIron[levelIndex]);
+            }
+            
+            // Hentikan efek visual upgrade
+            StopUpgradeEffect();
+            
+            Debug.Log("Farm upgrade canceled!");
+        }
+        
+        /// <summary>
+        /// Selesaikan upgrade langsung tanpa menunggu (untuk fitur instan upgrade atau cheat)
+        /// </summary>
+        public void CompleteUpgradeInstantly()
+        {
+            if (!isUpgrading)
+                return;
+                
+            // Langsung selesaikan upgrade
+            FinishUpgrade();
+        }
+        
+        /// <summary>
+        /// Menyelesaikan upgrade saat progress mencapai 100%
+        /// </summary>
+        private void FinishUpgrade()
+        {
+            // Pastikan upgrade sedang berlangsung
+            if (!isUpgrading)
+                return;
+                
+            // Reset status upgrade
+            isUpgrading = false;
+            upgradeProgress = 0f;
+            
             // Naikkan level
             currentLevel++;
             
             // Update stats
             UpdateBuildingStats();
             
-            // Efek upgrade (optional)
-            PlayUpgradeEffect();
+            // Efek upgrade selesai
+            PlayUpgradeCompletedEffect();
             
             Debug.Log($"Farm upgraded to level {currentLevel}!");
         }
+          /// <summary>
+        /// Menampilkan efek visual saat upgrade sedang berlangsung
+        /// </summary>
+        private void PlayUpgradeInProgressEffect()
+        {
+            // TODO: Implementasi efek upgrade in-progress seperti particle system atau animasi
+            // Contoh: mengaktifkan GameObject dengan particle system
+            if (upgradeInProgressEffect != null)
+            {
+                upgradeInProgressEffect.SetActive(true);
+            }
+        }
         
         /// <summary>
-        /// Menampilkan efek visual saat upgrade
+        /// Menampilkan efek visual saat upgrade selesai
         /// </summary>
-        private void PlayUpgradeEffect()
+        private void PlayUpgradeCompletedEffect()
         {
-            // TODO: Implementasi efek upgrade seperti particle system
+            // TODO: Implementasi efek upgrade selesai seperti particle system
+            // Contoh: menonaktifkan efek in-progress dan mengaktifkan efek completed
+            if (upgradeInProgressEffect != null)
+            {
+                upgradeInProgressEffect.SetActive(false);
+            }
+            
+            if (upgradeCompletedEffect != null)
+            {
+                upgradeCompletedEffect.SetActive(true);
+                
+                // Nonaktifkan efek completed setelah beberapa detik
+                StartCoroutine(DeactivateAfterDelay(upgradeCompletedEffect, 3f));
+            }
+        }
+        
+        /// <summary>
+        /// Menghentikan efek visual upgrade
+        /// </summary>
+        private void StopUpgradeEffect()
+        {
+            // Nonaktifkan semua efek upgrade
+            if (upgradeInProgressEffect != null)
+            {
+                upgradeInProgressEffect.SetActive(false);
+            }
+            
+            if (upgradeCompletedEffect != null)
+            {
+                upgradeCompletedEffect.SetActive(false);
+            }
+        }
+        
+        /// <summary>
+        /// Coroutine untuk menonaktifkan GameObject setelah delay
+        /// </summary>
+        private System.Collections.IEnumerator DeactivateAfterDelay(GameObject obj, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            if (obj != null)
+            {
+                obj.SetActive(false);
+            }
         }
           /// <summary>
         /// Custom produksi resource - menyimpan ke storage farm
@@ -219,7 +370,7 @@ namespace KingdomClash
             // Update UI indicator jika ada
             UpdateResourceIndicator();
             
-            Debug.Log($"Farm produced {productionAmount} wood. Storage: {storedResources}/{maxStoredResources}");
+            Debug.Log($"Farm produced {productionAmount} food. Storage: {storedResources}/{maxStoredResources}");
         }
         
         /// <summary>
@@ -251,9 +402,8 @@ namespace KingdomClash
             
             // Tambahkan ke resource global player
             if (GameManager.Instance != null && harvestAmount > 0)
-            {
-                GameManager.Instance.UpdateResource("wood", harvestAmount);
-                Debug.Log($"Harvested {harvestAmount} wood from farm");
+            {                GameManager.Instance.UpdateResource("food", harvestAmount);
+                Debug.Log($"Harvested {harvestAmount} food from farm");
             }
             
             return harvestAmount;
@@ -331,15 +481,36 @@ namespace KingdomClash
         public float GetStoragePercentage()
         {
             return (float)storedResources / maxStoredResources;
-        }
-
-        private void Update()
+        }        private void Update()
         {
             // Cek apakah bangunan memproduksi resource
-            if (GetIsProducer())
+            if (GetIsProducer() && !isUpgrading)
             {
-                // Coba produksi resource ke storage internal
+                // Coba produksi resource ke storage internal (hanya jika tidak sedang upgrade)
                 ProduceResourceToStorage();
+            }
+            
+            // Proses upgrade jika sedang berlangsung
+            if (isUpgrading)
+            {
+                // Dapatkan waktu yang diperlukan untuk level saat ini
+                float currentUpgradeTime = GetUpgradeTimeForCurrentLevel();
+                
+                // Update progress
+                upgradeProgress += Time.deltaTime / currentUpgradeTime;
+                
+                // Trigger event untuk update UI
+                if (OnUpgradeProgressChanged != null)
+                {
+                    OnUpgradeProgressChanged.Invoke(upgradeProgress);
+                }
+                
+                // Cek jika upgrade selesai
+                if (upgradeProgress >= 1.0f)
+                {
+                    // Upgrade selesai
+                    FinishUpgrade();
+                }
             }
         }
         
@@ -475,6 +646,44 @@ namespace KingdomClash
             {
                 field.SetValue(this, name);
             }
+        }
+
+        /// <summary>
+        /// Muat data farm dari save file
+        /// </summary>
+        /// <param name="savedLevel">Level yang tersimpan</param>
+        /// <param name="savedStoredResources">Jumlah resource yang tersimpan</param>
+        public void LoadSavedData(int savedLevel, int savedStoredResources)
+        {
+            // Pastikan array sudah siap
+            EnsureArrayLengths();
+            
+            // Set level
+            currentLevel = Mathf.Clamp(savedLevel, 1, maxLevel);
+            
+            // Update stats berdasarkan level
+            UpdateBuildingStats();
+            
+            // Set stored resources
+            storedResources = Mathf.Clamp(savedStoredResources, 0, maxStoredResources);
+            
+            Debug.Log($"Loaded farm data: Level {currentLevel}, Resources {storedResources}/{maxStoredResources}");
+        }
+
+        /// <summary>
+        /// Memeriksa apakah farm sedang dalam proses upgrade
+        /// </summary>
+        public bool IsUpgrading()
+        {
+            return isUpgrading;
+        }
+        
+        /// <summary>
+        /// Mendapatkan nilai progress upgrade saat ini (0-1)
+        /// </summary>
+        public float GetUpgradeProgress()
+        {
+            return upgradeProgress;
         }
     }
 }

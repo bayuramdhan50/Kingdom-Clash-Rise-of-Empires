@@ -125,7 +125,7 @@ MonoBehaviour:
   health: 100
   maxHealth: 100
   producesResources: 1
-  resourceType: wood
+  resourceType: food
   productionAmount: 0
   productionInterval: 60
   healthBar: {fileID: 7643512275771006181, guid: c6ca9f59245da8145b4cb0a74a5074fc,
@@ -142,6 +142,11 @@ MonoBehaviour:
   - 40
   - 30
   levelStorageCapacity: 64000000c80000002c010000
+  isUpgrading: 0
+  upgradeProgress: 0
+  upgradeTime: []
+  upgradeInProgressEffect: {fileID: 0}
+  upgradeCompletedEffect: {fileID: 0}
   upgradeButtonPrefab: {fileID: 0}
   resourceIndicator: {fileID: 0}
 --- !u!114 &-2745947497235139023

@@ -3748,7 +3748,6 @@ GameObject:
   - component: {fileID: 1537131182230164025}
   - component: {fileID: -7519059579114820982}
   - component: {fileID: -7901971047524229214}
-  - component: {fileID: 3384389947088029185}
   - component: {fileID: 4820551947837026460}
   m_Layer: 0
   m_Name: DarkELF_Worker
@@ -3870,23 +3869,6 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3384389947088029185
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6367905653284703951}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 84005a8cc15c1d046b7a623e26c3a5c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  unitType: infantry
-  maxHealth: 100
-  attack: 10
-  defense: 10
-  moveSpeed: 5
 --- !u!114 &4820551947837026460
 MonoBehaviour:
   m_ObjectHideFlags: 0

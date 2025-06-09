@@ -165,15 +165,11 @@ namespace KingdomClash
             int militaryUnitCount = 0;
             
             foreach (GameObject unit in enemyUnits)
-            {
-                Unit unitComponent = unit.GetComponent<Unit>();
-                if (unitComponent != null)
-                {
-                    string unitType = unitComponent.GetUnitType().ToLower();
-                    if (unitType.Contains("worker"))
-                        workerCount++;
-                    else
-                        militaryUnitCount++;
+            {                if (IsWorkerUnit(unit)) {
+                    workerCount++;
+                }
+                else {
+                    militaryUnitCount++;
                 }
             }
             
@@ -210,9 +206,8 @@ namespace KingdomClash
                                aiResources.iron < minResourceAmount;
 
             // Decision making
-            
-            // Priority 1: Ensure we have workers
-            if (workerCount < 3)
+              // Priority 1: Ensure we have exactly 1 worker
+            if (workerCount == 0)
             {
                 currentState = AIState.Training;
                 return;
@@ -471,22 +466,26 @@ namespace KingdomClash
             
             foreach (GameObject unit in enemyUnits)
             {
-                Unit unitComponent = unit.GetComponent<Unit>();
-                if (unitComponent != null)
+                if (IsWorkerUnit(unit))
                 {
-                    string unitType = unitComponent.GetUnitType().ToLower();
-                    if (unitType.Contains("worker"))
-                        workerCount++;
-                    else if (unitType.Contains("infantry"))
-                        infantryCount++;
-                    else if (unitType.Contains("archer"))
-                        archerCount++;
-                    else if (unitType.Contains("cavalry"))
-                        cavalryCount++;
+                    workerCount++;
+                }
+                else
+                {
+                    Unit unitComponent = unit.GetComponent<Unit>();
+                    if (unitComponent != null)
+                    {
+                        string unitType = unitComponent.GetUnitType().ToLower();
+                        if (unitType.Contains("infantry"))
+                            infantryCount++;
+                        else if (unitType.Contains("archer"))
+                            archerCount++;
+                        else if (unitType.Contains("cavalry"))
+                            cavalryCount++;
+                    }
                 }
             }
-            
-            // Check for training buildings
+              // Check for training buildings
             bool hasBarracks = false;
             bool hasArchery = false;
             bool hasStable = false;
@@ -509,9 +508,8 @@ namespace KingdomClash
             // Decide what to train
             GameObject unitToTrain = null;
             string unitTypeName = "";
-            
-            // Priority 1: Always keep some workers
-            if (workerCount < 3 && workerPrefab != null)
+              // Priority 1: Always keep exactly 1 worker
+            if (workerCount == 0 && workerPrefab != null)
             {
                 unitToTrain = workerPrefab;
                 unitTypeName = "worker";
@@ -556,6 +554,11 @@ namespace KingdomClash
                 if (unitComponent != null && !string.IsNullOrEmpty(unitTypeName))
                 {
                     newUnit.name = $"Enemy {unitTypeName}";
+                      // Explicitly set the unit type if it's a worker
+                    if (unitTypeName.Contains("worker"))
+                    {
+                        unitComponent.SetUnitType("worker");
+                    }
                 }
                 
                 // Add to tracking and deduct resources
@@ -564,6 +567,7 @@ namespace KingdomClash
                 aiResources.iron -= 50;
                 
                 Debug.Log($"AI trained a new {unitTypeName}");
+                  // We don't need additional verification anymore
             }
         }
 
@@ -756,6 +760,37 @@ namespace KingdomClash
             }
             
             return closest;
+        }
+
+        /// <summary>
+        /// Helper method to check if a unit is a worker (more reliable detection)
+        /// </summary>
+        private bool IsWorkerUnit(GameObject unit)
+        {
+            if (unit == null)
+                return false;
+                
+            // Method 1: Check by unit type
+            Unit unitComponent = unit.GetComponent<Unit>();
+            if (unitComponent != null && unitComponent.GetUnitType().ToLower().Contains("worker"))
+            {
+                return true;
+            }
+            
+            // Method 2: Check by WorkerUnit component
+            WorkerUnit workerComponent = unit.GetComponent<WorkerUnit>();
+            if (workerComponent != null)
+            {
+                return true;
+            }
+            
+            // Method 3: Check by name
+            if (unit.name.ToLower().Contains("worker"))
+            {
+                return true;
+            }
+            
+            return false;
         }
     }
 }

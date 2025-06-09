@@ -361,5 +361,195 @@ namespace KingdomClash
             placedBuildings.Clear();
             Debug.Log("BuildingManager: Building list cleared for fresh registration");
         }
+        /// <summary>
+        /// Save all building data to a GameData instance
+        /// </summary>
+        /// <param name="gameData">The game data to save to</param>
+        public void SaveBuildingData(GameData gameData)
+        {
+            if (gameData == null)
+            {
+                Debug.LogError("Cannot save building data: GameData is null");
+                return;
+            }
+                
+            // Clear existing building data
+            gameData.placedBuildings.Clear();
+            
+            // Log before saving for debugging
+            Debug.Log($"Attempting to save {placedBuildings.Count} buildings to game data.");
+            
+            // Jika tidak ada bangunan yang terdaftar, coba temukan semua yang ada di scene
+            if (placedBuildings.Count == 0 || placedBuildings.Count < 3) // Force scan if less than expected
+            {
+                Debug.LogWarning($"Missing buildings! Found only {placedBuildings.Count}. Scanning scene for all buildings...");
+                Building[] sceneBuildings = FindObjectsOfType<Building>();
+                
+                if (sceneBuildings.Length > 0)
+                {
+                    Debug.Log($"Found {sceneBuildings.Length} buildings in scene. Re-registering all of them...");
+                    
+                    // Clear existing list and register all again
+                    placedBuildings.Clear();
+                    
+                    // Register semua bangunan yang ditemukan
+                    foreach (Building building in sceneBuildings)
+                    {
+                        if (building != null)
+                        {
+                            RegisterPlacedBuilding(building);
+                            Debug.Log($"Re-registered: {building.GetBuildingName()} at {building.transform.position}");
+                        }
+                    }
+                }
+            }
+            
+            // Now save all registered buildings
+            foreach (Building building in placedBuildings)
+            {
+                if (building != null)
+                {
+                    // Get the prefab name for this building
+                    string prefabName = GetPrefabNameForBuilding(building);
+                    
+                    // Check if this is a Farm Building and create specialized data
+                    if (building is FarmBuilding)
+                    {
+                        FarmBuilding farmBuilding = (FarmBuilding)building;
+                        FarmBuildingData farmData = new FarmBuildingData(farmBuilding, prefabName);
+                        gameData.placedBuildings.Add(farmData);
+                        Debug.Log($"Saved FarmBuilding: {building.GetBuildingName()} (Level {farmBuilding.GetCurrentLevel()})");
+                    }
+                    else
+                    {
+                        // Create regular building data for non-farm buildings
+                        BuildingData buildingData = new BuildingData(building, prefabName);
+                        gameData.placedBuildings.Add(buildingData);
+                    }
+                }
+            }
+            
+            Debug.Log($"Successfully saved {gameData.placedBuildings.Count} buildings.");
+        }
+        
+        /// <summary>
+        /// Loads a building from saved data
+        /// </summary>
+        /// <param name="buildingData">The building data to load from</param>
+        /// <returns>The created building GameObject or null if failed</returns>
+        public GameObject LoadBuilding(BuildingData buildingData)
+        {
+            if (buildingData == null)
+            {
+                Debug.LogError("Cannot load building: BuildingData is null");
+                return null;
+            }
+            
+            // Find the prefab
+            GameObject prefab = GetPrefabByName(buildingData.prefabName);
+            if (prefab == null)
+            {
+                Debug.LogError($"Cannot load building: Prefab '{buildingData.prefabName}' not found");
+                return null;
+            }
+            
+            // Instantiate the building
+            GameObject buildingObject = Instantiate(
+                prefab, 
+                buildingData.position.ToVector3(), 
+                buildingData.rotation.ToQuaternion()
+            );
+            
+            // Set up the Building component
+            Building building = buildingObject.GetComponent<Building>();
+            if (building != null)
+            {
+                // Set health
+                building.SetHealth(buildingData.health);
+                
+                // Register the building
+                RegisterPlacedBuilding(building);
+                
+                // Special handling for FarmBuildingData
+                if (buildingData is FarmBuildingData && building is FarmBuilding)
+                {
+                    FarmBuildingData farmData = (FarmBuildingData)buildingData;
+                    FarmBuilding farmBuilding = (FarmBuilding)building;
+                    
+                    // Load farm-specific data
+                    // We need to add methods to FarmBuilding to set these values
+                    farmBuilding.LoadSavedData(farmData.currentLevel, farmData.storedResources);
+                    
+                    Debug.Log($"Loaded FarmBuilding: {buildingData.buildingName} (Level {farmData.currentLevel})");
+                }
+                else
+                {
+                    Debug.Log($"Loaded Building: {buildingData.buildingName}");
+                }
+            }
+            else
+            {
+                Debug.LogError($"Instantiated object does not have Building component: {buildingData.buildingName}");
+            }
+            
+            return buildingObject;
+        }
+        
+        /// <summary>
+        /// Get the prefab name for a building
+        /// </summary>
+        private string GetPrefabNameForBuilding(Building building)
+        {
+            if (building == null)
+                return string.Empty;
+            
+            // Try to find matching prefab by name
+            foreach (var prefab in buildingPrefabs)
+            {
+                if (prefab == null) continue;
+                
+                if (prefab.name == building.gameObject.name.Replace("(Clone)", "").Trim())
+                {
+                    return prefab.name;
+                }
+            }
+            
+            // If no exact match, use the building name as fallback
+            return building.GetBuildingName();
+        }
+        
+        /// <summary>
+        /// Get a building prefab by name
+        /// </summary>
+        /// <param name="prefabName">The name of the prefab to find</param>
+        /// <returns>The prefab GameObject or null if not found</returns>
+        public GameObject GetPrefabByName(string prefabName)
+        {
+            if (string.IsNullOrEmpty(prefabName))
+                return null;
+            
+            // Check dictionary first for faster lookup
+            if (prefabDictionary.ContainsKey(prefabName))
+            {
+                return prefabDictionary[prefabName];
+            }
+            
+            // Fallback to manual search
+            foreach (var prefab in buildingPrefabs)
+            {
+                if (prefab != null && prefab.name == prefabName)
+                {
+                    // Add to dictionary for next time
+                    if (!prefabDictionary.ContainsKey(prefabName))
+                    {
+                        prefabDictionary.Add(prefabName, prefab);
+                    }
+                    return prefab;
+                }
+            }
+            
+            Debug.LogWarning($"Prefab with name {prefabName} not found!");
+            return null;
+        }
     }
 }
