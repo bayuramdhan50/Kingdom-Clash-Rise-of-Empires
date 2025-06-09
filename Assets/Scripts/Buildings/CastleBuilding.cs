@@ -25,8 +25,8 @@ namespace KingdomClash
             }
             
             // Castles have more health than normal buildings
-            SetMaxHealth(10);
-            SetHealth(10);
+            SetMaxHealth(500);
+            SetHealth(500);
         }
         
         /// <summary>

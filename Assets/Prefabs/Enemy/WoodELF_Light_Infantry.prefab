@@ -2264,7 +2264,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84005a8cc15c1d046b7a623e26c3a5c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  unitType: infantry
+  unitType: enemyinfantry
   maxHealth: 100
   attack: 10
   defense: 10
@@ -2285,6 +2285,9 @@ MonoBehaviour:
   attackCooldown: 2
   unitTag: PlayerUnit
   enemyTag: EnemyUnit
+  enemyBuildingTag: EnemyBuilding
+  enemyCastleTag: EnemyCastle
+  playerCastleTag: PlayerCastle
 --- !u!1 &3533598703508617105
 GameObject:
   m_ObjectHideFlags: 0

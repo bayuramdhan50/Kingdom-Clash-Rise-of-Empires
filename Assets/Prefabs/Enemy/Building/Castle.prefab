@@ -85,8 +85,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buildingName: Castle
   buildingDescription: 
-  health: 10
-  maxHealth: 10
+  health: 500
+  maxHealth: 500
   producesResources: 0
   resourceType: 
   productionAmount: 0

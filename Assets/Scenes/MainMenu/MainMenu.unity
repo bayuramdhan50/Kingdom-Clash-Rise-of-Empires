@@ -6355,6 +6355,12 @@ MonoBehaviour:
     type: 3}
   cavalryPrefab: {fileID: 5732341051999255319, guid: 2d58c8633ca6707409869db0f11a7521,
     type: 3}
+  enemyInfantryPrefab: {fileID: 3298767450429801714, guid: ece9a54290572f54cb99675ec296d2cf,
+    type: 3}
+  enemyArcherPrefab: {fileID: 1077875782725174656, guid: accdd23a1c56a7240aa3687db7744b2d,
+    type: 3}
+  enemyCavalryPrefab: {fileID: 8307631096497678429, guid: 1d69470e69ef42446a556291aa8ac0f5,
+    type: 3}
 --- !u!4 &1968559320
 Transform:
   m_ObjectHideFlags: 0
